@@ -11,12 +11,11 @@ VERSION_SED = sed s/@VERSION/"${VERSION}"/
 DATE = `git log -1 --pretty=format:%ad`
 DATE_SED = sed s/@DATE/"${DATE}"/
 
-#| ${DATE_SED} \
-
 xdate:
 	@rm -f ${BUILD_DIR}/xdate*.js
 	@cat ${SRC_DIR}/xdate.js \
 		| ${VERSION_SED} \
+		| ${DATE_SED} \
 		> ${BUILD_DIR}/${DEVELOPMENT_FILE}
 	@java -jar ${BUILD_DIR}/compiler.jar --warning_level VERBOSE --jscomp_off checkTypes \
 		--js ${BUILD_DIR}/${DEVELOPMENT_FILE} \
