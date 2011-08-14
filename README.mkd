@@ -1,0 +1,10 @@
+
+XDate
+=====
+
+XDate is a lightweight wrapper around JavaScript's Date object.
+It adds commonly needed functionality for parsing, formatting, and manipulating dates.
+
+Most importantly, it will hold any date you give it.
+Unlike JavaScript's Date Object, it is immune to DST gaps.
+This ensures your dates behave consistently across every browser in the world.
