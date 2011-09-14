@@ -72,7 +72,8 @@ test("ordinals", function() {
 
 test("fff milliseconds", function() {
 	var d = new XDate();
-	return d.getMilliseconds()+'' === d.toString('fff');
+	var s = d.toString('fff');
+	return d.getMilliseconds() === parseInt(s, 10) && s.length==3;
 });
 
 
@@ -84,30 +85,21 @@ test("timezone", function() {
 	return d1.toString('z') == '-7' &&
 		d1.toString('zz') == '-07' &&
 		d1.toString('zzz') == '-07:15' &&
-		d1.toString('K') == '-07:15' &&
 		d2.toString('z') == '+7' &&
 		d2.toString('zz') == '+07' &&
 		d2.toString('zzz') == '+07:15';
-		d2.toString('K') == '+07:15';
 });
 
 
-test("timezone K in toUTCString", function() {
-	var d = new XDate();
-	d.getTimezoneOffset = function() { return 7 * 60 + 15 };
-	return d.toUTCString('K') == 'Z';
-});
-
-
-test("ISO", function() {
+test("ISO, showOriginalTimezone", function() {
 	var d = new XDate(2011, 5, 8, 14, 35, 21);
-	return d.toString('u').indexOf("2011-06-08T14:35:21") === 0;
+	return d.toISOString(true).indexOf("2011-06-08T14:35:21") === 0;
 });
 
 
 test("ISO, no timezone", function() {
-	var d = new XDate(2011, 5, 8, 14, 35, 21);
-	return d.toString('i') == "2011-06-08T14:35:21";
+	var d = new XDate(2011, 5, 8, 14, 35, 21, false);
+	return d.toISOString() == "2011-06-08T14:35:21";
 });
 
 
@@ -115,7 +107,7 @@ test("ISO with toUTCString", function() {
 	var d = new XDate()
 		.setUTCFullYear(2011, 5, 8)
 		.setUTCHours(14, 35, 21, 0);
-	return d.toUTCString('u') == "2011-06-08T14:35:21Z";
+	return d.toISOString() == "2011-06-08T14:35:21Z";
 });
 
 
@@ -162,32 +154,10 @@ test("toString/toUTCString settings param", function() {
 
 
 test("iso week, correct digits", function() {
-	return new XDate(2011, 2, 1).toString('W') == '9' &&
-		new XDate(2011, 2, 1).toUTCString('W') == '9' &&
-		new XDate(2011, 2, 1).toString('WW') == '09' &&
-		new XDate(2011, 2, 1).toUTCString('WW') == '09';
-});
-
-
-test("iso week mega-test", function() {
-	if (!Date.prototype.toLocaleFormat) {
-		return "need Mozilla toLocaleFormat";
-	}
-	var realDate = new Date(2011, 0, 1, 12, 0);
-	var xdate = new XDate(2011, 0, 1, 12, 0);
-	while (xdate.getFullYear() != 2014) {
-		var w1 = realDate.toLocaleFormat('%V');
-		var w2 = xdate.toString('WW');
-		if (w1 != w2) {
-			return [
-				false,
-				realDate.toString() + '=' + w1 + ' ' + xdate.toString() + '=' + w2
-			];
-		}
-		realDate.setDate(realDate.getDate() + 1);
-		xdate.setDate(xdate.getDate() + 1);
-	}
-	return true;
+	return new XDate(2011, 2, 1).toString('w') == '9' &&
+		new XDate(2011, 2, 1).toUTCString('w') == '9' &&
+		new XDate(2011, 2, 1).toString('ww') == '09' &&
+		new XDate(2011, 2, 1).toUTCString('ww') == '09';
 });
 
 
@@ -229,3 +199,34 @@ test("custom formatter function", function() {
 		d.toUTCString('vvv') == "cool/true/5";
 });
 
+
+
+
+
+test("toString methods, hasTimezone=yes", function() {
+	var realDate = new Date(2011, 3, 20, 12, 30);
+	var xdate = new XDate(2011, 3, 20, 12, 30);
+	return realDate.toString() == xdate.toString() &&
+		realDate.toDateString() == xdate.toDateString() &&
+		realDate.toTimeString() == xdate.toTimeString() &&
+		realDate.toLocaleString() == xdate.toLocaleString() &&
+		realDate.toLocaleDateString() == xdate.toLocaleDateString() &&
+		realDate.toLocaleTimeString() == xdate.toLocaleTimeString() &&
+		realDate.toUTCString() == xdate.toUTCString() &&
+		realDate.toGMTString() == xdate.toGMTString();
+});
+
+test("toString methods, hasTimezone=no", function() {
+	var realDate = new Date(2011, 3, 20, 12, 30);
+	var xdate = new XDate(2011, 3, 20, 12, 30, false);
+	return realDate.toString().indexOf(xdate.toString()) == 0 &&
+		realDate.toTimeString().indexOf(xdate.toTimeString()) == 0 &&
+		realDate.toLocaleString().indexOf(xdate.toLocaleString()) == 0 &&
+		realDate.toLocaleDateString().indexOf(xdate.toLocaleDateString()) == 0 &&
+		realDate.toLocaleTimeString().indexOf(xdate.toLocaleTimeString()) == 0;
+});
+
+test("toGMTString", function() {
+	var xdate = new XDate();
+	return xdate.toUTCString() == xdate.toGMTString();
+});

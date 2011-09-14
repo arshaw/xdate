@@ -9,6 +9,7 @@ test("IETF", function() {
 		d.getUTCHours() == 13 &&
 		d.getUTCMinutes() == 44 &&
 		d.getUTCSeconds() == 12 &&
+		d.hasTimezone() &&
 		+d == +new Date(s);
 });
 
@@ -22,7 +23,8 @@ test("ISO, no time", function() {
 		!d.getHours() &&
 		!d.getMinutes() &&
 		!d.getSeconds() &&
-		!d.getMilliseconds();
+		!d.getMilliseconds() &&
+		!d.hasTimezone();
 });
 
 
@@ -35,7 +37,8 @@ test("ISO, T", function() {
 		d.getHours() == 14 &&
 		d.getMinutes() == 45 &&
 		d.getSeconds() == 30 &&
-		!d.getMilliseconds();
+		!d.getMilliseconds() &&
+		!d.hasTimezone();
 });
 
 
@@ -48,7 +51,8 @@ test("ISO, space", function() {
 		d.getHours() == 14 &&
 		d.getMinutes() == 45 &&
 		d.getSeconds() == 30 &&
-		!d.getMilliseconds();
+		!d.getMilliseconds() &&
+		!d.hasTimezone();
 });
 
 
@@ -61,7 +65,8 @@ test("ISO, no seconds", function() {
 		d.getHours() == 14 &&
 		d.getMinutes() == 45 &&
 		!d.getSeconds() &&
-		!d.getMilliseconds();
+		!d.getMilliseconds() &&
+		!d.hasTimezone();
 });
 
 
@@ -74,7 +79,8 @@ test("ISO, milliseconds", function() {
 		d.getHours() == 14 &&
 		d.getMinutes() == 45 &&
 		d.getSeconds() == 30 &&
-		d.getMilliseconds() == 500;
+		d.getMilliseconds() == 500 &&
+		!d.hasTimezone();
 });
 
 
@@ -83,7 +89,8 @@ test("ISO, timezone colon", function() {
 	var d = new XDate(s);
 	return d.getUTCHours() == 16 &&
 		d.getUTCMinutes() == 30 &&
-		d.getUTCSeconds() == 28;
+		d.getUTCSeconds() == 28 &&
+		d.hasTimezone();
 });
 
 
@@ -92,7 +99,8 @@ test("ISO, timezone no colon", function() {
 	var d = new XDate(s);
 	return d.getUTCHours() == 16 &&
 		d.getUTCMinutes() == 30 &&
-		d.getUTCSeconds() == 28;
+		d.getUTCSeconds() == 28 &&
+		d.hasTimezone();
 });
 
 
@@ -101,7 +109,8 @@ test("ISO, timezone hour only", function() {
 	var d = new XDate(s);
 	return d.getUTCHours() == 16 &&
 		d.getUTCMinutes() == 45 &&
-		d.getUTCSeconds() == 34;
+		d.getUTCSeconds() == 34 &&
+		d.hasTimezone();
 });
 
 
@@ -110,7 +119,8 @@ test("ISO, timezone positive", function() {
 	var d = new XDate(s);
 	return d.getUTCHours() == 11 &&
 		d.getUTCMinutes() == 30 &&
-		d.getUTCSeconds() == 28;
+		d.getUTCSeconds() == 28 &&
+		d.hasTimezone();
 });
 
 
@@ -119,13 +129,14 @@ test("ISO, with Z", function() {
 	return d.getUTCFullYear() == 2011 &&
 		d.getUTCMonth() == 5 &&
 		d.getUTCDate() == 8 &&
-		!d.getUTCHours() && !d.getUTCMinutes();
+		!d.getUTCHours() && !d.getUTCMinutes() &&
+		d.hasTimezone();
 });
 
 
 test("in and out", function() {
 	var d = new XDate();
-	return +new XDate(d.toString('u')) == +d;
+	return +new XDate(d.toISOString()) == +d;
 });
 
 

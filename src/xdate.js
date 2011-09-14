@@ -1,18 +1,17 @@
+
 /**
  * @preserve XDate v@VERSION
- * http://arshaw.com/xdate/
- *
- * Copyright 2011, Adam Shaw
- * Dual licensed under the MIT or GPL Version 2 licenses.
- *
- * Date: @DATE
+ * Docs & Licensing: http://arshaw.com/xdate/
  */
 
-
 /*
-TODO: describe real vs anchor date
-*/
-
+ * Internal Architecture
+ * ---------------------
+ * An XDate wraps a native Date. The native Date is stored in the '0' property of the object.
+ * By default, an XDate has a timezone. However, to signify that an XDate does NOT have a timezone,
+ * the `notzToString` method is assigned to the internal Date's toString (see `hasTimezone`).
+ *
+ */
 
 var XDate = (function(Date, undefined) {
 
@@ -27,8 +26,8 @@ var XDate = (function(Date, undefined) {
 /** @const */ var DAY          = 7;
 /** @const */ var YEAR         = 8;
 /** @const */ var WEEK         = 9;
-
 /** @const */ var DAY_MS = 86400000;
+/** @const */ var ISO_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss(.fff)zzz";
 
 
 var methodSubjects = [
@@ -47,26 +46,35 @@ var subjectPlurals = [
 	'Months',       // 1
 	'Days'          // 2
 ];
-var otherGetterNames = [
-	'getTimezoneOffset',
-	'getTime',
-	'valueOf',
-	'toDateString',
-	'toTimeString',
-	'toLocaleString',
-	'toLocaleDateString',
-	'toLocaleTimeString',
-	'toJSON'
+var unitsWithin = [
+	12,   // months in year
+	31,   // days in month (sort of)
+	24,   // hours in day
+	60,   // minutes in hour
+	60,   // seconds in minute
+	1000, // milliseconds in second
+	1     //
 ];
 var formatStringRE = new RegExp(
 	"(([a-zA-Z])\\2*)|" + // 1, 2
-	"(\\(" + "(('.*?'|\\(.*?\\)|.)*?)" + "\\))|" + // 3, 4, 5
+	"(\\(" + "(('.*?'|\\(.*?\\)|.)*?)" + "\\))|" + // 3, 4, 5 (allows for 1 level of inner quotes or parens)
 	"('(.*?)')" // 6, 7
 );
 var UTC = Date.UTC;
 var proto = XDate.prototype;
-var i;
 
+
+
+// This makes an XDate look pretty in Firebug and Web Inspector.
+// It makes an XDate seem array-like, and displays [ <internal-date> ]
+proto.length = 1;
+proto.splice = Array.prototype.splice;
+
+
+
+
+/* Constructor
+---------------------------------------------------------------------------------*/
 
 
 function XDate() {
@@ -78,200 +86,193 @@ function XDate() {
 
 
 function init(xdate, args) {
-	var arg = args[0];
 	var len = args.length;
+	var forceNoTimezone = false;
+	if (isBoolean(args[len-1])) {
+		forceNoTimezone = !args[--len];
+		args = slice(args, 0, len);
+	}
 	if (!len) {
-		_setReal(xdate, new Date());
+		xdate[0] = new Date();
+		forceNoTimezone = false; // disregard bool parameter
 	}
 	else if (len == 1) {
+		var arg = args[0];
 		if (arg instanceof Date || isNumber(arg)) {
-			_setReal(xdate, new Date(arg));
+			xdate[0] = new Date(arg);
 		}
 		else if (arg instanceof XDate) {
-			setAnchor(xdate, new Date(getAnchor(arg)));
+			xdate[0] = _clone(arg);
+			forceNoTimezone = false; // disregard bool parameter
 		}
 		else if (isString(arg)) {
-			return parse(arg, xdate);
+			xdate[0] = new Date(0);
+			xdate = parse(arg, xdate);
+			forceNoTimezone = false; // disregard bool parameter
 		}
 	}
 	else {
-		setAnchor(xdate, new Date(UTC.apply(Date, args)));
+		xdate[0] = new Date(UTC.apply(Date, args));
+		if (!forceNoTimezone) {
+			xdate[0] = UTCToLocal(xdate[0]);
+		}
+	}
+	if (forceNoTimezone) {
+		xdate[0].toString = notzToString;
 	}
 	return xdate;
 }
 
 
-function ensureXDate(arg) {
-	return arg instanceof XDate ? arg : new XDate(arg);
+
+/* Timezone Methods
+---------------------------------------------------------------------------------*/
+
+
+proto.addTimezone = methodize(addTimezone);
+function addTimezone(xdate) {
+	if (!hasTimezone(xdate)) {
+		xdate[0] = UTCToLocal(xdate[0]); // makes a new date, wiping out notzToString
+	}
+	return xdate; // for chaining
 }
 
 
+proto.removeTimezone = methodize(removeTimezone);
+function removeTimezone(xdate) {
+	if (hasTimezone(xdate)) {
+		xdate[0] = localToUTC(xdate[0]);
+		xdate[0].toString = notzToString;
+	}
+	return xdate; // for chaining
+}
 
-/* Standard Methods, Adding Methods, Diffing Methods
-------------------------------------------------------------------------------*/
+
+proto.hasTimezone = methodize(hasTimezone);
+function hasTimezone(xdate) {
+	return xdate[0].toString !== notzToString;
+}
 
 
-for (i=0; i<WEEK; i++) (function(subject, fieldIndex) {
+proto.getTimezoneOffset = function() {
+	if (hasTimezone(this)) {
+		return this[0].getTimezoneOffset();
+	}else{
+		return 0;
+	}
+};
 
-	if (fieldIndex != YEAR) {
+
+
+/* get / set / add / diff Methods (except for week-related)
+---------------------------------------------------------------------------------*/
+
+
+each(methodSubjects, function(subject, fieldIndex) {
+
+	proto['get' + subject] = function() {
+		return this[0]['get' + (hasTimezone(this) ? '' : 'UTC') + subject]();
+	};
 	
-		// getFullYear
-		// getMonth
-		// getDate
-		// getHours
-		// getMinutes
-		// getSeconds
-		// getMilliseconds
-		// getDay
-		// (can't do getYear here b/c getUTCYear doesn't exist. see below)
-		proto['get' + subject] = function() {
-			return getLocalField(this, fieldIndex);
+	if (fieldIndex != YEAR) { // because there is no getUTCYear
+	
+		proto['getUTC' + subject] = function() {
+			return this[0]['getUTC' + subject]();
 		};
 		
-		// getUTCFullYear
-		// getUTCMonth
-		// getUTCDate
-		// getUTCHours
-		// getUTCMinutes
-		// getUTCSeconds
-		// getUTCMilliseconds
-		// getUTCDay
-		// (there is no getUTCYear)
-		proto['getUTC' + subject] = function() {
-			return getUTCField(this, fieldIndex);
-		};
-	
 	}
-	
-	if (fieldIndex != DAY) {
-	
-		// setFullYear
-		// setMonth
-		// setDate
-		// setHours
-		// setMinutes
-		// setSeconds
-		// setMilliseconds
-		// setYear
-		// (there is no setDay)
-		proto['set' + subject] = function(value, preventOverflow) {
-			_set(this, fieldIndex, value, preventOverflow, arguments);
+
+	if (fieldIndex != DAY) { // because there is no setDay or setUTCDay
+	                         // and the add* and diff* methods use DATE instead
+		
+		proto['set' + subject] = function(value) {
+			_set(this, fieldIndex, value, arguments);
 			return this; // for chaining
 		};
-	
-		if (fieldIndex != YEAR) {
-	
-			// setUTCFullYear
-			// setUTCMonth
-			// setUTCDate
-			// setUTCHours
-			// setUTCMinutes
-			// setUTCMilliseconds
-			// (there is no setUTCDay)
-			// (there is no setUTCYear)
-			proto['setUTC' + subject] = function() {
-				var real = getReal(this)
-				real['setUTC' + subject].apply(real, arguments);
-				clearAnchor(this);
+		
+		if (fieldIndex != YEAR) { // because there is no setUTCYear
+		                          // and the add* and diff* methods use FULLYEAR instead
+			
+			proto['setUTC' + subject] = function(value) {
+				_set(this, fieldIndex, value, arguments, true);
 				return this; // for chaining
 			};
 			
-			// addYears (FullYear)
-			// addMonths
-			// addDays (Date)
-			// addHours
-			// addMinutes
-			// addSeconds
-			// addMilliseconds
-			// (there is no adding Day)
-			// (there is no adding Year)
 			proto['add' + (subjectPlurals[fieldIndex] || subject)] = function(delta, preventOverflow) {
-				delta = parseInt(delta);
-				this['set' + subject](
-					this['get' + subject]() + delta,
-					preventOverflow
-				);
+				_add(this, fieldIndex, delta, preventOverflow);
 				return this; // for chaining
 			};
 			
-			// diffYears (FullYear)
-			// diffMonths
-			// diffDays (Date)
-			// diffHours
-			// diffMinutes
-			// diffSeconds
-			// diffMilliseconds
-			// (there is no diffing Day)
-			// (there is no diffing Year)
 			proto['diff' + (subjectPlurals[fieldIndex] || subject)] = function(otherDate) {
 				return _diff(this, fieldIndex, otherDate);
 			};
-		
+			
 		}
-	
+		
 	}
+
+});
+
+
+function _set(xdate, fieldIndex, value, args, useUTC) {
 	
-})(methodSubjects[i], i);
-
-
-for (i=0; i<otherGetterNames.length; i++) (function(getterName) {
-
-	proto[getterName] = function() {
-		return getReal(this)[getterName]();
-	};
-
-})(otherGetterNames[i]);
-
-
-proto.getYear = function() {
-	return this.getFullYear() - 1900;
-};
-
-
-proto.setTime = function(t) {
-	getReal(this).setTime(t);
-	clearAnchor(this);
-	return this; // for chaining
-};
-
-
-function _set(xdate, fieldIndex, value, preventOverflow, args) {
-	value = parseInt(value);
-	var month = fieldIndex == MONTH ? value % 12 : xdate.getMonth();
-	var anchor = getAnchor(xdate);
-	if (args.length == 2 && (isBoolean(preventOverflow) || preventOverflow === undefined)) {
+	var date = xdate[0];
+	var month = fieldIndex == MONTH ? value % 12 : getField(MONTH);
+	var preventOverflow = false;
+	var len = args.length;
+	if (len == 2 && isBoolean(args[1])) {
+		preventOverflow = args[1];
 		args = [value];
 	}
-	anchor['setUTC' + methodSubjects[fieldIndex]].apply(anchor, args);
-	setAnchor(xdate, anchor);
-	if (
-		(fieldIndex == FULLYEAR || fieldIndex == MONTH) &&
-		preventOverflow === true &&
-		xdate.getMonth() != month
-	) {
-		xdate.addMonths(-1)
-			.setDate(
-				getDaysInMonth(xdate.getFullYear(), xdate.getMonth())
-			);
+	useUTC = useUTC || !hasTimezone(xdate);
+	
+	function getField(i) {
+		return useUTC ? getUTCField(date, i) : getLocalField(date, i);
+	}
+	
+	function setField(i, setArgs) {
+		date['set' + (useUTC ? 'UTC' : '') + methodSubjects[i]].apply(date, setArgs);
+	}
+	
+	setField(fieldIndex, args);
+	
+	if (preventOverflow && getField(MONTH) != month) {
+		setField(MONTH, [ getField(MONTH) - 1 ]);
+		setField(DATE, [ getDaysInMonth(getField(FULLYEAR), getField(MONTH)) ]);
 	}
 }
 
 
-function _diff(xdate, fieldIndex, otherDate) {
-	var d1 = getAnchor(xdate);
-	var d2 = getAnchor(ensureXDate(otherDate));
+function _add(xdate, fieldIndex, delta, preventOverflow) {
+	delta = Number(delta);
+	var origDelta = delta;
+	delta = Math.floor(delta);
+	xdate['set' + methodSubjects[fieldIndex]](
+		xdate['get' + methodSubjects[fieldIndex]]() + delta,
+		preventOverflow || false
+	);
+	if (delta != origDelta && fieldIndex < MILLISECONDS) {
+		_add(xdate, fieldIndex+1, (origDelta-delta)*unitsWithin[fieldIndex], preventOverflow);
+	}
+}
+
+
+function _diff(xdate, fieldIndex, otherDate) { // fieldIndex=FULLYEAR is for years, fieldIndex=DATE is for days
+
 	var v = 0;
+	var d1 = xdate.toDate();
+	var d2 = XDate(otherDate); // will be made a native Date...
+	
+	if (xdate.hasTimezone()) {
+		d2 = d2.addTimezone();
+	}else{
+		d2 = d2.removeTimezone();
+	}
+	d2 = d2.toDate();
+	
 	if (fieldIndex == FULLYEAR || fieldIndex == MONTH) {
 		for (var i=MILLISECONDS, methodName; i>=fieldIndex; i--) {
-			v /= [
-				12,   // months in year
-				31,   // day in month (kinda)
-				24,   // hours in day
-				60,   // minutes in hour
-				60,   // seconds in minute
-				1000, // milliseconds in second
-				1     //
-				][i];
+			v /= unitsWithin[i];
 			methodName = 'getUTC' + methodSubjects[i];
 			v += d2[methodName]() - d1[methodName]();
 		}
@@ -296,32 +297,33 @@ function _diff(xdate, fieldIndex, otherDate) {
 			1        //
 			][fieldIndex - 3];
 	}
+	
 	return v;
 }
 
 
 
-/* Week Stuff (TODO: write tests)
-----------------------------------------------------------------------------*/
+/* Week Methods
+---------------------------------------------------------------------------------*/
 
 
-proto.diffWeeks = function(otherDate) {
-	return _diff(this, WEEK, otherDate);
-};
-
-
-proto.addWeeks = function(delta) {
-	return this.addDays(parseInt(delta) * 7);
-};
-
-
-proto.getWeek = function(d) {
+proto.getWeek = function() {
 	return getWeek(this.getFullYear(), this.getMonth(), this.getDate());
 };
 
 
-proto.getUTCWeek = function(d) {
+proto.getUTCWeek = function() {
 	return getWeek(this.getUTCFullYear(), this.getUTCMonth(), this.getUTCDate());
+};
+
+
+proto.addWeeks = function(delta) {
+	return this.addDays(Number(delta) * 7);
+};
+
+
+proto.diffWeeks = function(otherDate) {
+	return _diff(this, WEEK, otherDate);
 };
 
 
@@ -341,121 +343,83 @@ function getWeek(year, month, date) {
 }
 
 
-function getWeek1(year) {
+function getWeek1(year) { // returns date of first week of year
 	var d = new Date(UTC(year, 0, 4));
-	d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7);
+	d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); // make it Monday of the week
 	return d;
 }
 
 
 
-
-/* Comparison Methods
-------------------------------------------------------------------------------*/
-
-
-proto.equals = function(date) {
-	return +getAnchor(this) == +getAnchor(ensureXDate(date));
-};
+/* toString Methods
+---------------------------------------------------------------------------------*/
 
 
-proto.before = function(date) {
-	return getAnchor(this) < getAnchor(ensureXDate(date));
-};
-
-
-proto.after = function(date) {
-	return getAnchor(this) > getAnchor(ensureXDate(date));
-};
-
-
-
-
-/* Other Utility Methods
-------------------------------------------------------------------------------*/
-
-
-proto.valid = function() {
-	return !isNaN(+getReal(this));
-};
-
-
-proto.clearTime = function() {
-	return this.setHours(0, 0, 0, 0);
-};
-
-
-proto.clone = function() {
-	return new XDate(this);
-};
-
-
-proto.toDate = function() {
-	return new Date(getReal(this));
-};
-
-
-
-
-/* Parsing
-------------------------------------------------------------------------------*/
-
-
-XDate.parsers = [
-	parseISO
-];
-
-
-XDate.parse = function(str) {
-	return +new XDate(''+str);
-};
-
-
-function parse(str, xdate) {
-	for (
-		var parsers = XDate.parsers, i=0, res;
-		i < parsers.length;
-		i++
-	) {
-		res = parsers[0](str, xdate);
-		if (res) {
-			return res;
-		}
+proto.toString = function(formatString, settings, uniqueness) {
+	if (formatString === undefined || !isValid(this)) {
+		return this[0].toString(); // already accounts for no-timezone (might be notzToString)
+	}else{
+		return format(this, formatString, settings, uniqueness);
 	}
-	setReal(xdate, new Date(str));
-	return xdate;
-}
+};
 
 
-function parseISO(str, xdate) {
-	var m = str.match(/^(\d{4})(-(\d{2})(-(\d{2})([T ](\d{2}):(\d{2})(:(\d{2})(\.(\d+))?)?(Z|(([-+])(\d{2})(:?(\d{2}))?))?)?)?)?$/);
-	if (m) {
-		var d = new Date(UTC(
-			m[1],
-			m[3] ? m[3] - 1 : 0,
-			m[5] || 1,
-			m[7] || 0,
-			m[8] || 0,
-			m[10] || 0,
-			m[12] ? Number('0.' + m[12]) * 1000 : 0
-		));
-		if (m[13]) { // has gmt offset or Z
-			setReal(xdate, d);
-			if (m[14]) { // has gmt offset
-				xdate.addMinutes((m[15] == '-' ? 1 : -1) * (Number(m[16]) * 60 + (m[18] ? Number(m[18]) : 0)));
-			}
+proto.toUTCString = proto.toGMTString = function(formatString, settings, uniqueness) {
+	if (formatString === undefined || !isValid(this)) {
+		if (hasTimezone(this)) {
+			return this[0].toUTCString();
 		}else{
-			setAnchor(xdate, d);
+			return stripGMT(this[0].toUTCString());
 		}
-		return xdate;
+	}else{
+		return format(this, formatString, settings, uniqueness, true);
 	}
+};
+
+
+proto.toISOString = function(showOriginalTimezone) {
+	if (showOriginalTimezone) {
+		return this.toString(ISO_FORMAT_STRING);
+	}else{
+		return this.toUTCString(ISO_FORMAT_STRING);
+	}
+};
+
+
+each(
+	[
+		'toDateString',
+		'toTimeString',
+		'toLocaleString',
+		'toLocaleDateString',
+		'toLocaleTimeString'
+	],
+	function(methodName) {
+		proto[methodName] = function() {
+			if (hasTimezone(this)) {
+				return this[0][methodName]();
+			}else{
+				return stripGMT(UTCToLocal(this[0])[methodName]());
+			}
+		};
+	}
+);
+
+
+function notzToString() { // a method for a Date object
+	return stripGMT(UTCToLocal(this).toString());
+}
+
+
+function stripGMT(s) {
+	return s.replace(/\s+(GMT|UTC).*/, '');
 }
 
 
 
+/* Advanced Formatting
+---------------------------------------------------------------------------------*/
 
-/* Formatting
-------------------------------------------------------------------------------*/
 
 XDate.defaultLocale = '';
 XDate.locales = {
@@ -468,35 +432,11 @@ XDate.locales = {
 		pmDesignator: 'PM'
 	}
 };
-XDate.formatters = {
-	i: "yyyy-MM-dd'T'HH:mm:ss(.fff)",
-	u: "yyyy-MM-dd'T'HH:mm:ss(.fff)K"
-};
+XDate.formatters = {};
 
 
-proto.toString = function(formatString, settings, uniqueness) {
-	if (!arguments.length || !this.valid()) {
-		return getReal(this).toString();
-	}
-	return format(formatString, this, false, settings, uniqueness);
-};
+function format(xdate, formatString, settings, uniqueness, useUTC) {
 
-
-proto.toUTCString = proto.toGMTString = function(formatString, settings, uniqueness) {
-	if (!arguments.length || !this.valid()) {
-		return getReal(this).toUTCString();
-	}
-	return format(formatString, this, true, settings, uniqueness);
-};
-
-
-proto.toISOString = function() {
-	return this.toUTCString('u');
-};
-
-
-function format(formatString, xdate, useUTC, settings, uniqueness) {
-	
 	var locales = XDate.locales;
 	var defaultLocaleSettings = locales[XDate.defaultLocale] || {};
 	var _getField = useUTC ? getUTCField : getLocalField;
@@ -517,27 +457,27 @@ function format(formatString, xdate, useUTC, settings, uniqueness) {
 		return _getField(xdate, fieldIndex);
 	}
 	
-	return _format(formatString, xdate, getField, useUTC, getSetting, uniqueness);
+	return _format(xdate, formatString, getField, getSetting, useUTC);
 }
 
 
-function _format(formatString, xdate, getField, useUTC, getSetting, uniqueness) {
+function _format(xdate, formatString, getField, getSetting, useUTC) {
 	var m;
 	var subout;
 	var out = '';
 	while (m = formatString.match(formatStringRE)) {
 		out += formatString.substr(0, m.index);
-		if (m[1]) {
-			out += processTokenString(m[1], xdate, getField, useUTC, getSetting, uniqueness);
+		if (m[1]) { // consecutive alphabetic characters
+			out += processTokenString(xdate, m[1], getField, getSetting, useUTC);
 		}
-		else if (m[3]) {
-			subout = _format(m[4], xdate, getField, useUTC, getSetting, uniqueness);
-			if (parseInt(subout.replace(/\D/g, ''))) {
+		else if (m[3]) { // parenthesis
+			subout = _format(xdate, m[4], getField, getSetting, useUTC);
+			if (parseInt(subout.replace(/\D/g, ''), 10)) { // if any of the numbers are non-zero. or no numbers at all
 				out += subout;
 			}
 		}
-		else { // else if (m[6]) {
-			out += m[7] || "'";
+		else { // else if (m[6]) { // single quotes
+			out += m[7] || "'"; // if inner is blank, meaning 2 consecutive quotes = literal single quote
 		}
 		formatString = formatString.substr(m.index + m[0].length);
 	}
@@ -545,12 +485,12 @@ function _format(formatString, xdate, getField, useUTC, getSetting, uniqueness) 
 }
 
 
-function processTokenString(tokenString, xdate, getField, useUTC, getSetting, uniqueness) {
+function processTokenString(xdate, tokenString, getField, getSetting, useUTC) {
 	var end = tokenString.length;
 	var replacement;
 	var out = '';
 	while (end > 0) {
-		replacement = getTokenReplacement(tokenString.substr(0, end), xdate, getField, useUTC, getSetting, uniqueness);
+		replacement = getTokenReplacement(xdate, tokenString.substr(0, end), getField, getSetting, useUTC);
 		if (replacement !== undefined) {
 			out += replacement;
 			tokenString = tokenString.substr(end);
@@ -563,13 +503,13 @@ function processTokenString(tokenString, xdate, getField, useUTC, getSetting, un
 }
 
 
-function getTokenReplacement(token, xdate, getField, useUTC, getSetting, uniqueness) {
+function getTokenReplacement(xdate, token, getField, getSetting, useUTC) {
 	var formatter = XDate.formatters[token];
 	if (isString(formatter)) {
-		return _format(formatter, xdate, getField, useUTC, getSetting, uniqueness);
+		return _format(xdate, formatter, getField, getSetting, useUTC);
 	}
 	else if (isFunction(formatter)) {
-		return formatter(xdate, useUTC, getSetting);
+		return formatter(xdate, useUTC || false, getSetting);
 	}
 	switch (token) {
 		case 'fff'  : return zeroPad(getField(MILLISECONDS), 3);
@@ -595,12 +535,11 @@ function getTokenReplacement(token, xdate, getField, useUTC, getSetting, uniquen
 		case 'tt'   : return _getDesignator(getField, getSetting).toLowerCase();
 		case 'T'    : return _getDesignator(getField, getSetting).substr(0, 1);
 		case 'TT'   : return _getDesignator(getField, getSetting);
-		case 'K'    : if (useUTC) return 'Z';
-		case 'zzz'  : return getTZOSign(xdate) + zeroPad(getTZOHours(xdate)) + ':' + zeroPad(getTZOMinutes(xdate));
-		case 'zz'   : return getTZOSign(xdate) + zeroPad(getTZOHours(xdate));
-		case 'z'    : return getTZOSign(xdate) + getTZOHours(xdate);
-		case 'W'    : return _getWeek(getField);
-		case 'WW'   : return zeroPad(_getWeek(getField));
+		case 'z'    :
+		case 'zz'   :
+		case 'zzz'  : return _getTZString(xdate, token, useUTC);
+		case 'w'    : return _getWeek(getField);
+		case 'ww'   : return zeroPad(_getWeek(getField)); // what capital Z's?
 		case 'S'    :
 			var d = getField(DATE);
 			if (d > 10 && d < 20) return 'th';
@@ -609,18 +548,25 @@ function getTokenReplacement(token, xdate, getField, useUTC, getSetting, uniquen
 }
 
 
-function getTZOSign(xdate) {
-	return xdate.getTimezoneOffset() < 0 ? '+' : '-';
-}
-
-
-function getTZOHours(xdate) {
-	return Math.floor(Math.abs(xdate.getTimezoneOffset()) / 60);
-}
-
-
-function getTZOMinutes(xdate) {
-	return Math.abs(xdate.getTimezoneOffset()) % 60;
+function _getTZString(xdate, token, useUTC) {
+	if (!hasTimezone(xdate)) {
+		return '';
+	}
+	if (useUTC) {
+		return 'Z';
+	}
+	var tzo = xdate.getTimezoneOffset();
+	var sign = tzo < 0 ? '+' : '-';
+	var hours = Math.floor(Math.abs(tzo) / 60);
+	var minutes = Math.abs(tzo) % 60;
+	var out = hours;
+	if (token == 'zz') {
+		out = zeroPad(hours);
+	}
+	else if (token != 'z') { // zzz or K
+		out = zeroPad(hours) + ':' + zeroPad(minutes);
+	}
+	return sign + out;
 }
 
 
@@ -635,12 +581,118 @@ function _getWeek(getField) {
 
 
 
+/* Parsing
+---------------------------------------------------------------------------------*/
+
+
+XDate.parsers = [
+	parseISO
+];
+
+
+XDate.parse = function(str) {
+	return +XDate(''+str);
+};
+
+
+function parse(str, xdate) {
+	var parsers = XDate.parsers;
+	var i = 0;
+	var res;
+	for (; i<parsers.length; i++) {
+		res = parsers[0](str, xdate);
+		if (res) {
+			return res;
+		}
+	}
+	xdate[0] = new Date(str);
+	return xdate;
+}
+
+
+function parseISO(str, xdate) {
+	var m = str.match(/^(\d{4})(-(\d{2})(-(\d{2})([T ](\d{2}):(\d{2})(:(\d{2})(\.(\d+))?)?(Z|(([-+])(\d{2})(:?(\d{2}))?))?)?)?)?$/);
+	if (m) {
+		var d = new Date(UTC(
+			m[1],
+			m[3] ? m[3] - 1 : 0,
+			m[5] || 1,
+			m[7] || 0,
+			m[8] || 0,
+			m[10] || 0,
+			m[12] ? Number('0.' + m[12]) * 1000 : 0
+		));
+		if (m[13]) { // has gmt offset or Z
+			if (m[14]) { // has gmt offset
+				d.setUTCMinutes(
+					d.getUTCMinutes() +
+					(m[15] == '-' ? 1 : -1) * (Number(m[16]) * 60 + (m[18] ? Number(m[18]) : 0))
+				);
+			}
+		}else{ // has no timezone
+			xdate.removeTimezone();
+		}
+		return xdate.setTime(+d);
+	}
+}
+
+
+
+/* Misc Methods
+---------------------------------------------------------------------------------*/
+
+
+proto.getTime = proto.valueOf = function() {
+	return this[0].getTime();
+};
+
+
+proto.setTime = function(t) {
+	this[0].setTime(t);
+	return this; // for chaining
+};
+
+
+if (Date.prototype.toJSON) {
+	proto.toJSON = function() {
+		return this[0].toJSON();
+	};
+}
+
+
+proto.isValid = methodize(isValid);
+function isValid(xdate) {
+	return !isNaN(+xdate[0]);
+}
+
+
+proto.clone = function() {
+	return XDate(this);
+};
+
+
+proto.clearTime = function() {
+	return this.setHours(0, 0, 0, 0); // will return an XDate for chaining
+};
+
+
+proto.toDate = function() {
+	return new Date(this[0]);
+};
+
+
+
 /* Misc Class Methods
------------------------------------------------------------------------------*/
+---------------------------------------------------------------------------------*/
 
 
 XDate.now = function() {
 	return +new Date();
+};
+
+
+XDate.today = function() {
+	return XDate().clearTime();
 };
 
 
@@ -651,66 +703,58 @@ XDate.getDaysInMonth = getDaysInMonth;
 
 
 
+/* Internal Utilities
+---------------------------------------------------------------------------------*/
 
-/* Internal Accessors
-------------------------------------------------------------------------------*/
 
-
-function getLocalField(xdate, fieldIndex) {
-	if (xdate._) {
-		return xdate._['getUTC' + methodSubjects[fieldIndex]]();
-	}else{
-		return xdate[0]['get' + methodSubjects[fieldIndex]]();
+function _clone(xdate) { // returns the internal Date object that should be used
+	var d = new Date(xdate[0]);
+	if (!hasTimezone(xdate)) {
+		d.toString = notzToString;
 	}
+	return d;
 }
 
 
-function getUTCField(xdate, fieldIndex) {
-	return xdate[0]['getUTC' + methodSubjects[fieldIndex]]();
+function getLocalField(d, fieldIndex) { // d can be a Date or an XDate
+	return d['get' + methodSubjects[fieldIndex]]();
 }
 
 
-function getReal(xdate) {
-	return xdate[0];
-}
-
-
-function setReal(xdate, realDate) {
-	_setReal(xdate, realDate);
-	clearAnchor(xdate);
-}
-
-
-function _setReal(xdate, realDate) {
-	xdate[0] = realDate;
-}
-
-
-function getAnchor(xdate) {
-	return xdate._ || localToUTC(xdate[0]);
-}
-
-
-function setAnchor(xdate, anchorDate) {
-	var realDate = UTCToLocal(anchorDate);
-	if (!isNaN(+anchorDate) && realDate.getHours() != anchorDate.getUTCHours()) {
-		xdate._ = anchorDate;
-	}else{
-		clearAnchor(xdate);
-	}
-	xdate[0] = realDate;
-}
-
-
-function clearAnchor(xdate) {
-	delete xdate._;
+function getUTCField(d, fieldIndex) { // d can be a Date or an XDate
+	return d['getUTC' + methodSubjects[fieldIndex]]();
 }
 
 
 
+/* Date Math Utilities
+---------------------------------------------------------------------------------*/
 
-/* Date Utils
-------------------------------------------------------------------------------*/
+
+function localToUTC(date) {
+	return new Date(UTC(
+		date.getFullYear(),
+		date.getMonth(),
+		date.getDate(),
+		date.getHours(),
+		date.getMinutes(),
+		date.getSeconds(),
+		date.getMilliseconds()
+	));
+}
+
+
+function UTCToLocal(date) {
+	return new Date(
+		date.getUTCFullYear(),
+		date.getUTCMonth(),
+		date.getUTCDate(),
+		date.getUTCHours(),
+		date.getUTCMinutes(),
+		date.getUTCSeconds(),
+		date.getUTCMilliseconds()
+	);
+}
 
 
 function getDaysInMonth(year, month) {
@@ -718,36 +762,28 @@ function getDaysInMonth(year, month) {
 }
 
 
-function localToUTC(localDate) {
-	return new Date(UTC(
-		localDate.getFullYear(),
-		localDate.getMonth(),
-		localDate.getDate(),
-		localDate.getHours(),
-		localDate.getMinutes(),
-		localDate.getSeconds(),
-		localDate.getMilliseconds()
-	));
+
+/* General Utilities
+---------------------------------------------------------------------------------*/
+
+
+function methodize(f) {
+	return function() {
+		return f.apply(null, [this].concat(slice(arguments)));
+	};
 }
 
 
-function UTCToLocal(universalDate) {
-	return new Date(
-		universalDate.getUTCFullYear(),
-		universalDate.getUTCMonth(),
-		universalDate.getUTCDate(),
-		universalDate.getUTCHours(),
-		universalDate.getUTCMinutes(),
-		universalDate.getUTCSeconds(),
-		universalDate.getUTCMilliseconds()
-	);
+function slice(a, start, end) {
+	return Array.prototype.slice.call(a, start, end);
 }
 
 
-
-
-/* General Utils
-------------------------------------------------------------------------------*/
+function each(a, f) {
+	for (var i=0; i<a.length; i++) {
+		f(a[i], i);
+	};
+}
 
 
 function zeroPad(n, len) {
@@ -778,13 +814,6 @@ function isFunction(arg) {
 	return typeof arg == 'function';
 }
 
-
-
-
-// Make XDate objects array-like
-// Will show the "real" date within an array in Firebug, WebInspector
-proto.length = 1;
-proto.splice = Array.prototype.splice;
 
 
 return XDate;

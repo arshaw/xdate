@@ -1,5 +1,8 @@
 
 
+// THESE TESTS DONT MATTER ANYMORE
+
+
 test("avoid dead zone", function() {
 	var deadZone = getDSTDeadZone();
 	if (deadZone) {
