@@ -9,55 +9,55 @@ test("from XDate, with timezone", function() {
 	var xdate1 = new XDate();
 	var xdate2 = new XDate(xdate1);
 	return xdate1.getTime() == xdate2.getTime() &&
-		xdate1.hasTimezone() && xdate2.hasTimezone();
+		xdate1.hasLocalTimezone() && xdate2.hasLocalTimezone();
 });
 
 test("from XDate, with no timezone", function() {
-	var xdate1 = new XDate().removeTimezone();
+	var xdate1 = new XDate().removeLocalTimezone();
 	var xdate2 = new XDate(xdate1);
 	return xdate1.getTime() == xdate2.getTime() &&
-		!xdate1.hasTimezone() && !xdate2.hasTimezone();
+		!xdate1.hasLocalTimezone() && !xdate2.hasLocalTimezone();
 });
 
-test("from native Date, hasTimezone=yes", function() {
+test("from native Date, hasLocalTimezone=yes", function() {
 	var date = new Date();
 	var xdate1 = new XDate(date);
 	var xdate2 = new XDate(date, true);
 	return date.getTime() == xdate1.getTime() &&
 		date.getTime() == xdate2.getTime() &&
-		xdate1.hasTimezone() && xdate2.hasTimezone();
+		xdate1.hasLocalTimezone() && xdate2.hasLocalTimezone();
 });
 
-test("from native Date, hasTimezone=no", function() {
+test("from native Date, hasLocalTimezone=no", function() {
 	var date = new Date();
 	var xdate = new XDate(date, false);
 	return date.getTime() == xdate.getTime() &&
-		!xdate.hasTimezone();
+		!xdate.hasLocalTimezone();
 });
 
-test("from milliseconds time, hasTimezone=yes", function() {
+test("from milliseconds time, hasLocalTimezone=yes", function() {
 	var MS = 933490800000;
 	var xdate1 = new XDate(MS);
 	var xdate2 = new XDate(MS, true);
-	return xdate1.hasTimezone() &&
-		xdate2.hasTimezone() &&
+	return xdate1.hasLocalTimezone() &&
+		xdate2.hasLocalTimezone() &&
 		xdate1.getTime() == MS &&
 		xdate2.getTime() == MS;
 });
 
-test("from milliseconds time, hasTimezone=no", function() {
+test("from milliseconds time, hasLocalTimezone=no", function() {
 	var MS = 933490800000;
 	var xdate = new XDate(MS, false);
-	return !xdate.hasTimezone() && xdate.getTime() == MS;
+	return !xdate.hasLocalTimezone() && xdate.getTime() == MS;
 });
 
-test("year/month/date, hasTimezone=yes", function() {
+test("year/month/date, hasLocalTimezone=yes", function() {
 	var YEAR = 2011;
 	var MONTH = 5;
 	var DATE = 4;
 	var xdate1 = new XDate(YEAR, MONTH, DATE);
 	var xdate2 = new XDate(YEAR, MONTH, DATE, true);
-	return xdate1.hasTimezone() && xdate2.hasTimezone() &&
+	return xdate1.hasLocalTimezone() && xdate2.hasLocalTimezone() &&
 		xdate1.getTime() == xdate2.getTime() &&
 		xdate1.getFullYear() == YEAR &&
 		xdate1.getMonth() == MONTH &&
@@ -68,7 +68,7 @@ test("year/month/date, hasTimezone=yes", function() {
 		!xdate1.getMilliseconds();
 });
 
-test("year/month/date/minutes/seconds/milliseconds, hasTimezone=yes", function() {
+test("year/month/date/minutes/seconds/milliseconds, hasLocalTimezone=yes", function() {
 	var YEAR = 2011;
 	var MONTH = 5;
 	var DATE = 4;
@@ -78,7 +78,7 @@ test("year/month/date/minutes/seconds/milliseconds, hasTimezone=yes", function()
 	var MILLISECONDS = 750;
 	var xdate1 = new XDate(YEAR, MONTH, DATE, HOURS, MINUTES, SECONDS, MILLISECONDS);
 	var xdate2 = new XDate(YEAR, MONTH, DATE, HOURS, MINUTES, SECONDS, MILLISECONDS, true);
-	return xdate1.hasTimezone() && xdate2.hasTimezone() &&
+	return xdate1.hasLocalTimezone() && xdate2.hasLocalTimezone() &&
 		xdate1.getTime() == xdate2.getTime() &&
 		xdate1.getFullYear() == YEAR &&
 		xdate1.getMonth() == MONTH &&
@@ -89,12 +89,12 @@ test("year/month/date/minutes/seconds/milliseconds, hasTimezone=yes", function()
 		xdate1.getMilliseconds() == MILLISECONDS;
 });
 
-test("year/month/date, hasTimezone=no", function() {
+test("year/month/date, hasLocalTimezone=no", function() {
 	var YEAR = 2011;
 	var MONTH = 5;
 	var DATE = 4;
 	var xdate = new XDate(YEAR, MONTH, DATE, false);
-	return !xdate.hasTimezone()
+	return !xdate.hasLocalTimezone()
 		xdate.getFullYear() == YEAR &&
 		xdate.getMonth() == MONTH &&
 		xdate.getDate() == DATE &&
@@ -104,7 +104,7 @@ test("year/month/date, hasTimezone=no", function() {
 		!xdate.getMilliseconds();
 });
 
-test("year/month/date/minutes/seconds/milliseconds, hasTimezone=no", function() {
+test("year/month/date/minutes/seconds/milliseconds, hasLocalTimezone=no", function() {
 	var YEAR = 2011;
 	var MONTH = 5;
 	var DATE = 4;
@@ -113,7 +113,7 @@ test("year/month/date/minutes/seconds/milliseconds, hasTimezone=no", function() 
 	var SECONDS = 20;
 	var MILLISECONDS = 750;
 	var xdate = new XDate(YEAR, MONTH, DATE, HOURS, MINUTES, SECONDS, MILLISECONDS, false);
-	return !xdate.hasTimezone() &&	
+	return !xdate.hasLocalTimezone() &&	
 		xdate.getFullYear() == YEAR &&
 		xdate.getMonth() == MONTH &&
 		xdate.getDate() == DATE &&

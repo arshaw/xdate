@@ -203,7 +203,7 @@ test("custom formatter function", function() {
 
 
 
-test("toString methods, hasTimezone=yes", function() {
+test("toString methods, hasLocalTimezone=yes", function() {
 	var realDate = new Date(2011, 3, 20, 12, 30);
 	var xdate = new XDate(2011, 3, 20, 12, 30);
 	return realDate.toString() == xdate.toString() &&
@@ -216,7 +216,7 @@ test("toString methods, hasTimezone=yes", function() {
 		realDate.toGMTString() == xdate.toGMTString();
 });
 
-test("toString methods, hasTimezone=no", function() {
+test("toString methods, hasLocalTimezone=no", function() {
 	var realDate = new Date(2011, 3, 20, 12, 30);
 	var xdate = new XDate(2011, 3, 20, 12, 30, false);
 	return realDate.toString().indexOf(xdate.toString()) == 0 &&

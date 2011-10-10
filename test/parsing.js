@@ -9,7 +9,7 @@ test("IETF", function() {
 		d.getUTCHours() == 13 &&
 		d.getUTCMinutes() == 44 &&
 		d.getUTCSeconds() == 12 &&
-		d.hasTimezone() &&
+		d.hasLocalTimezone() &&
 		+d == +new Date(s);
 });
 
@@ -24,7 +24,7 @@ test("ISO, no time", function() {
 		!d.getMinutes() &&
 		!d.getSeconds() &&
 		!d.getMilliseconds() &&
-		!d.hasTimezone();
+		!d.hasLocalTimezone();
 });
 
 
@@ -38,7 +38,7 @@ test("ISO, T", function() {
 		d.getMinutes() == 45 &&
 		d.getSeconds() == 30 &&
 		!d.getMilliseconds() &&
-		!d.hasTimezone();
+		!d.hasLocalTimezone();
 });
 
 
@@ -52,7 +52,7 @@ test("ISO, space", function() {
 		d.getMinutes() == 45 &&
 		d.getSeconds() == 30 &&
 		!d.getMilliseconds() &&
-		!d.hasTimezone();
+		!d.hasLocalTimezone();
 });
 
 
@@ -66,7 +66,7 @@ test("ISO, no seconds", function() {
 		d.getMinutes() == 45 &&
 		!d.getSeconds() &&
 		!d.getMilliseconds() &&
-		!d.hasTimezone();
+		!d.hasLocalTimezone();
 });
 
 
@@ -80,7 +80,7 @@ test("ISO, milliseconds", function() {
 		d.getMinutes() == 45 &&
 		d.getSeconds() == 30 &&
 		d.getMilliseconds() == 500 &&
-		!d.hasTimezone();
+		!d.hasLocalTimezone();
 });
 
 
@@ -90,7 +90,7 @@ test("ISO, timezone colon", function() {
 	return d.getUTCHours() == 16 &&
 		d.getUTCMinutes() == 30 &&
 		d.getUTCSeconds() == 28 &&
-		d.hasTimezone();
+		d.hasLocalTimezone();
 });
 
 
@@ -100,7 +100,7 @@ test("ISO, timezone no colon", function() {
 	return d.getUTCHours() == 16 &&
 		d.getUTCMinutes() == 30 &&
 		d.getUTCSeconds() == 28 &&
-		d.hasTimezone();
+		d.hasLocalTimezone();
 });
 
 
@@ -110,7 +110,7 @@ test("ISO, timezone hour only", function() {
 	return d.getUTCHours() == 16 &&
 		d.getUTCMinutes() == 45 &&
 		d.getUTCSeconds() == 34 &&
-		d.hasTimezone();
+		d.hasLocalTimezone();
 });
 
 
@@ -120,7 +120,7 @@ test("ISO, timezone positive", function() {
 	return d.getUTCHours() == 11 &&
 		d.getUTCMinutes() == 30 &&
 		d.getUTCSeconds() == 28 &&
-		d.hasTimezone();
+		d.hasLocalTimezone();
 });
 
 
@@ -130,7 +130,7 @@ test("ISO, with Z", function() {
 		d.getUTCMonth() == 5 &&
 		d.getUTCDate() == 8 &&
 		!d.getUTCHours() && !d.getUTCMinutes() &&
-		d.hasTimezone();
+		d.hasLocalTimezone();
 });
 
 

@@ -9,7 +9,7 @@
  * ---------------------
  * An XDate wraps a native Date. The native Date is stored in the '0' property of the object.
  * By default, an XDate has a timezone. However, to signify that an XDate does NOT have a timezone,
- * the `notzToString` method is assigned to the internal Date's toString (see `hasTimezone`).
+ * the `notzToString` method is assigned to the internal Date's toString (see `hasLocalTimezone`).
  *
  */
 
@@ -129,33 +129,39 @@ function init(xdate, args) {
 ---------------------------------------------------------------------------------*/
 
 
-proto.addTimezone = methodize(addTimezone);
-function addTimezone(xdate) {
-	if (!hasTimezone(xdate)) {
-		xdate[0] = UTCToLocal(xdate[0]); // makes a new date, wiping out notzToString
+proto.addLocalTimezone = methodize(addLocalTimezone);
+function addLocalTimezone(xdate, coerce) {
+	if (!hasLocalTimezone(xdate)) {
+		if (coerce) {
+			xdate[0] = UTCToLocal(xdate[0]); // makes a new date, wiping out notzToString
+		}else{
+			xdate[0] = new Date(xdate[0]); // makes a new date, wiping out notzToString
+		}
 	}
 	return xdate; // for chaining
 }
 
 
-proto.removeTimezone = methodize(removeTimezone);
-function removeTimezone(xdate) {
-	if (hasTimezone(xdate)) {
-		xdate[0] = localToUTC(xdate[0]);
+proto.removeLocalTimezone = methodize(removeLocalTimezone);
+function removeLocalTimezone(xdate, coerce) {
+	if (hasLocalTimezone(xdate)) {
+		if (coerce) {
+			xdate[0] = localToUTC(xdate[0]);
+		}
 		xdate[0].toString = notzToString;
 	}
 	return xdate; // for chaining
 }
 
 
-proto.hasTimezone = methodize(hasTimezone);
-function hasTimezone(xdate) {
+proto.hasLocalTimezone = methodize(hasLocalTimezone);
+function hasLocalTimezone(xdate) {
 	return xdate[0].toString !== notzToString;
 }
 
 
 proto.getTimezoneOffset = function() {
-	if (hasTimezone(this)) {
+	if (hasLocalTimezone(this)) {
 		return this[0].getTimezoneOffset();
 	}else{
 		return 0;
@@ -171,7 +177,7 @@ proto.getTimezoneOffset = function() {
 each(methodSubjects, function(subject, fieldIndex) {
 
 	proto['get' + subject] = function() {
-		return this[0]['get' + (hasTimezone(this) ? '' : 'UTC') + subject]();
+		return this[0]['get' + (hasLocalTimezone(this) ? '' : 'UTC') + subject]();
 	};
 	
 	if (fieldIndex != YEAR) { // because there is no getUTCYear
@@ -224,7 +230,7 @@ function _set(xdate, fieldIndex, value, args, useUTC) {
 		preventOverflow = args[1];
 		args = [value];
 	}
-	useUTC = useUTC || !hasTimezone(xdate);
+	useUTC = useUTC || !hasLocalTimezone(xdate);
 	
 	function getField(i) {
 		return useUTC ? getUTCField(date, i) : getLocalField(date, i);
@@ -263,10 +269,10 @@ function _diff(xdate, fieldIndex, otherDate) { // fieldIndex=FULLYEAR is for yea
 	var d1 = xdate.toDate();
 	var d2 = XDate(otherDate); // will be made a native Date...
 	
-	if (xdate.hasTimezone()) {
-		d2 = d2.addTimezone();
+	if (xdate.hasLocalTimezone()) {
+		d2 = d2.addLocalTimezone(true);
 	}else{
-		d2 = d2.removeTimezone();
+		d2 = d2.removeLocalTimezone(true);
 	}
 	d2 = d2.toDate();
 	
@@ -366,7 +372,7 @@ proto.toString = function(formatString, settings, uniqueness) {
 
 proto.toUTCString = proto.toGMTString = function(formatString, settings, uniqueness) {
 	if (formatString === undefined || !isValid(this)) {
-		if (hasTimezone(this)) {
+		if (hasLocalTimezone(this)) {
 			return this[0].toUTCString();
 		}else{
 			return stripGMT(this[0].toUTCString());
@@ -396,7 +402,7 @@ each(
 	],
 	function(methodName) {
 		proto[methodName] = function() {
-			if (hasTimezone(this)) {
+			if (hasLocalTimezone(this)) {
 				return this[0][methodName]();
 			}else{
 				return stripGMT(UTCToLocal(this[0])[methodName]());
@@ -549,7 +555,7 @@ function getTokenReplacement(xdate, token, getField, getSetting, useUTC) {
 
 
 function _getTZString(xdate, token, useUTC) {
-	if (!hasTimezone(xdate)) {
+	if (!hasLocalTimezone(xdate)) {
 		return '';
 	}
 	if (useUTC) {
@@ -630,7 +636,7 @@ function parseISO(str, xdate) {
 				);
 			}
 		}else{ // has no timezone
-			xdate.removeTimezone();
+			xdate.removeLocalTimezone();
 		}
 		return xdate.setTime(+d);
 	}
@@ -709,7 +715,7 @@ XDate.getDaysInMonth = getDaysInMonth;
 
 function _clone(xdate) { // returns the internal Date object that should be used
 	var d = new Date(xdate[0]);
-	if (!hasTimezone(xdate)) {
+	if (!hasLocalTimezone(xdate)) {
 		d.toString = notzToString;
 	}
 	return d;

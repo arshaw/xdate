@@ -22,14 +22,14 @@ test("valid", function() {
 });
 
 
-test("toDate, hasTimezone=yes", function() {
+test("toDate, hasLocalTimezone=yes", function() {
 	var d = new Date(2012, 5, 8);
 	var xdate = new XDate(d);
 	return +xdate.toDate() == +d;
 });
 
 
-test("toDate, hasTimezone=no", function() {
+test("toDate, hasLocalTimezone=no", function() {
 	var d = new Date(2012, 5, 8);
 	var xdate = new XDate(+d, false);
 	return +xdate.toDate() == +d;
