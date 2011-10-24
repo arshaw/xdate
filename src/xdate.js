@@ -1,4 +1,3 @@
-
 /**
  * @preserve XDate v@VERSION
  * Docs & Licensing: http://arshaw.com/xdate/
@@ -765,7 +764,7 @@ function zeroPad(n, len) {
 	return n;
 }
 
-// Export for CommonJS. Node.js etc.
+// Export for Node.js
 if (typeof module !== 'undefined' && module.exports) {
 	module.exports = XDate;
 }
