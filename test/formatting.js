@@ -91,23 +91,44 @@ test("timezone", function() {
 });
 
 
-test("ISO, showOriginalTimezone", function() {
+test("toString(i)", function() {
 	var d = new XDate(2011, 5, 8, 14, 35, 21);
-	return d.toISOString(true).indexOf("2011-06-08T14:35:21") === 0;
+	return d.toString('i') == '2011-06-08T14:35:21';
 });
 
-
-test("ISO, no timezone", function() {
-	var d = new XDate(2011, 5, 8, 14, 35, 21, false);
-	return d.toISOString() == "2011-06-08T14:35:21";
+test("toString(i), utcMode=true", function() {
+	var d = new XDate(2011, 5, 8, 14, 35, 21, true);
+	return d.toString('i') == '2011-06-08T14:35:21';
 });
 
+test("toString(u)", function() {
+	var d = new XDate(2011, 5, 8, 14, 35, 21);
+	return d.toString('u').indexOf('2011-06-08T14:35:21') == 0;
+});
 
-test("ISO with toUTCString", function() {
-	var d = new XDate()
-		.setUTCFullYear(2011, 5, 8)
-		.setUTCHours(14, 35, 21, 0);
-	return d.toISOString() == "2011-06-08T14:35:21Z";
+test("toString(u), utcMode=true", function() {
+	var d = new XDate(2011, 5, 8, 14, 35, 21, true);
+	return d.toString('u') == '2011-06-08T14:35:21Z';
+});
+
+test("toUTCString(i)", function() {
+	var d = new XDate(Date.UTC(2011, 5, 8, 14, 35, 21));
+	return d.toUTCString('i') == '2011-06-08T14:35:21';
+});
+
+test("toUTCString(i), utcMode=true", function() {
+	var d = new XDate(Date.UTC(2011, 5, 8, 14, 35, 21), true);
+	return d.toUTCString('i') == '2011-06-08T14:35:21';
+});
+
+test("toUTCString(u)", function() {
+	var d = new XDate(Date.UTC(2011, 5, 8, 14, 35, 21));
+	return d.toUTCString('u') == '2011-06-08T14:35:21Z';
+});
+
+test("toUTCString(u), utcMode=true", function() {
+	var d = new XDate(Date.UTC(2011, 5, 8, 14, 35, 21), true);
+	return d.toUTCString('u') == '2011-06-08T14:35:21Z';
 });
 
 

@@ -18,7 +18,7 @@ test("clearTime", function() {
 test("valid", function() {
 	var good = new XDate();
 	var bad = new XDate('asdf');
-	return good.isValid() && !bad.isValid();
+	return good.valid() && !bad.valid();
 });
 
 
@@ -57,7 +57,7 @@ test("parse class method", function() {
 
 
 test("now class method", function() {
-	return Math.abs(Date.now() - XDate.now()) < 1000;
+	return Math.abs(+new Date() - XDate.now()) < 1000;
 });
 
 
@@ -111,7 +111,8 @@ test("chaining", function() {
 		.setUTCHours(12)
 		.setUTCMinutes(30)
 		.setUTCSeconds(30)
-		.setUTCMilliseconds(10);
+		.setUTCMilliseconds(10)
+		.setUTCMode(true);
 	return d instanceof XDate;
 });
 

@@ -9,7 +9,7 @@ test("IETF", function() {
 		d.getUTCHours() == 13 &&
 		d.getUTCMinutes() == 44 &&
 		d.getUTCSeconds() == 12 &&
-		d.hasLocalTimezone() &&
+		!d.getUTCMode() &&
 		+d == +new Date(s);
 });
 
@@ -24,7 +24,7 @@ test("ISO, no time", function() {
 		!d.getMinutes() &&
 		!d.getSeconds() &&
 		!d.getMilliseconds() &&
-		!d.hasLocalTimezone();
+		!d.getUTCMode();
 });
 
 
@@ -38,7 +38,7 @@ test("ISO, T", function() {
 		d.getMinutes() == 45 &&
 		d.getSeconds() == 30 &&
 		!d.getMilliseconds() &&
-		!d.hasLocalTimezone();
+		!d.getUTCMode();
 });
 
 
@@ -52,7 +52,7 @@ test("ISO, space", function() {
 		d.getMinutes() == 45 &&
 		d.getSeconds() == 30 &&
 		!d.getMilliseconds() &&
-		!d.hasLocalTimezone();
+		!d.getUTCMode();
 });
 
 
@@ -66,7 +66,7 @@ test("ISO, no seconds", function() {
 		d.getMinutes() == 45 &&
 		!d.getSeconds() &&
 		!d.getMilliseconds() &&
-		!d.hasLocalTimezone();
+		!d.getUTCMode();
 });
 
 
@@ -80,7 +80,7 @@ test("ISO, milliseconds", function() {
 		d.getMinutes() == 45 &&
 		d.getSeconds() == 30 &&
 		d.getMilliseconds() == 500 &&
-		!d.hasLocalTimezone();
+		!d.getUTCMode();
 });
 
 
@@ -90,7 +90,7 @@ test("ISO, timezone colon", function() {
 	return d.getUTCHours() == 16 &&
 		d.getUTCMinutes() == 30 &&
 		d.getUTCSeconds() == 28 &&
-		d.hasLocalTimezone();
+		!d.getUTCMode();
 });
 
 
@@ -100,7 +100,7 @@ test("ISO, timezone no colon", function() {
 	return d.getUTCHours() == 16 &&
 		d.getUTCMinutes() == 30 &&
 		d.getUTCSeconds() == 28 &&
-		d.hasLocalTimezone();
+		!d.getUTCMode();
 });
 
 
@@ -110,7 +110,7 @@ test("ISO, timezone hour only", function() {
 	return d.getUTCHours() == 16 &&
 		d.getUTCMinutes() == 45 &&
 		d.getUTCSeconds() == 34 &&
-		d.hasLocalTimezone();
+		!d.getUTCMode();
 });
 
 
@@ -120,7 +120,7 @@ test("ISO, timezone positive", function() {
 	return d.getUTCHours() == 11 &&
 		d.getUTCMinutes() == 30 &&
 		d.getUTCSeconds() == 28 &&
-		d.hasLocalTimezone();
+		!d.getUTCMode();
 });
 
 
@@ -130,7 +130,19 @@ test("ISO, with Z", function() {
 		d.getUTCMonth() == 5 &&
 		d.getUTCDate() == 8 &&
 		!d.getUTCHours() && !d.getUTCMinutes() &&
-		d.hasLocalTimezone();
+		!d.getUTCMode();
+});
+
+
+test("ISO, no timezone, utcMode=true", function() {
+	var s = "2010-06-08T14:30:28";
+	var d = new XDate(s, true);
+	return d.getFullYear() == 2010 && d.getUTCFullYear() == 2010 &&
+		d.getMonth() == 5 && d.getUTCMonth() == 5 &&
+		d.getDate() == 8 && d.getUTCDate() == 8 &&
+		d.getHours() == 14 && d.getUTCHours() == 14 &&
+		d.getMinutes() == 30 && d.getUTCMinutes() == 30 &&
+		d.getSeconds() == 28 && d.getUTCSeconds() == 28;
 });
 
 
