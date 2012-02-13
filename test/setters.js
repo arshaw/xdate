@@ -144,3 +144,126 @@ test("setYear", function() {
 	xdate.setYear(99);
 	return xdate.getFullYear() == 1999;
 });
+
+test("setWeek", function() {
+	function test(xdate, n) {
+		var year = xdate.getFullYear();
+		var day = xdate.getDay();
+		var hours = xdate.getHours();
+		var minutes = xdate.getMinutes();
+		var seconds = xdate.getSeconds();
+		var ms = xdate.getMilliseconds();
+		xdate.setWeek(n);
+		return xdate.getWeek() == n &&
+			xdate.getFullYear() == year &&
+			xdate.getDay() == day &&
+			xdate.getHours() == hours &&
+			xdate.getMinutes() == minutes &&
+			xdate.getSeconds() == seconds &&
+			xdate.getMilliseconds() == ms;
+	}
+	return test(XDate(), 50) &&
+		test(XDate(), 21) &&
+		test(XDate(2011, 5, 5), 5) &&
+		test(XDate(2009, 12, 12), 13);
+});
+
+test("setWeek, with year", function() {
+	function test(xdate, n, year) {
+		var day = xdate.getDay();
+		var hours = xdate.getHours();
+		var minutes = xdate.getMinutes();
+		var seconds = xdate.getSeconds();
+		var ms = xdate.getMilliseconds();
+		xdate.setWeek(n, year);
+		return xdate.getWeek() == n &&
+			xdate.getFullYear() == year &&
+			xdate.getDay() == day &&
+			xdate.getHours() == hours &&
+			xdate.getMinutes() == minutes &&
+			xdate.getSeconds() == seconds &&
+			xdate.getMilliseconds() == ms;
+	}
+	return test(XDate(), 50, 2013) &&
+		test(XDate(), 21, 2014) &&
+		test(XDate(2011, 5, 5), 5, 1999) &&
+		test(XDate(2009, 12, 12), 13, 1995);
+});
+
+test("setUTCWeek", function() {
+	function test(xdate, n) {
+		var year = xdate.getUTCFullYear();
+		var day = xdate.getUTCDay();
+		var hours = xdate.getUTCHours();
+		var minutes = xdate.getUTCMinutes();
+		var seconds = xdate.getUTCSeconds();
+		var ms = xdate.getUTCMilliseconds();
+		xdate.setUTCWeek(n);
+		return xdate.getUTCWeek() == n &&
+			xdate.getUTCFullYear() == year &&
+			xdate.getUTCDay() == day &&
+			xdate.getUTCHours() == hours &&
+			xdate.getUTCMinutes() == minutes &&
+			xdate.getUTCSeconds() == seconds &&
+			xdate.getUTCMilliseconds() == ms;
+	}
+	return test(XDate(), 50) &&
+		test(XDate(), 21) &&
+		test(XDate(2011, 5, 5), 5) &&
+		test(XDate(2009, 12, 12), 13);
+});
+
+test("setUTCWeek, with year", function() {
+	function test(xdate, n, year) {
+		var day = xdate.getUTCDay();
+		var hours = xdate.getUTCHours();
+		var minutes = xdate.getUTCMinutes();
+		var seconds = xdate.getUTCSeconds();
+		var ms = xdate.getUTCMilliseconds();
+		xdate.setUTCWeek(n, year);
+		return xdate.getUTCWeek() == n &&
+			xdate.getUTCFullYear() == year &&
+			xdate.getUTCDay() == day &&
+			xdate.getUTCHours() == hours &&
+			xdate.getUTCMinutes() == minutes &&
+			xdate.getUTCSeconds() == seconds &&
+			xdate.getUTCMilliseconds() == ms;
+	}
+	return test(XDate(), 50, 2013) &&
+		test(XDate(), 21, 2014) &&
+		test(XDate(2011, 5, 5), 5, 1999) &&
+		test(XDate(2009, 12, 12), 13, 1995);
+});
+
+test("setWeek overflow", function() {
+	var xdate = new XDate(2012, 0, 3);
+	xdate.setWeek(54);
+	return xdate.getFullYear() == 2013 &&
+		xdate.getWeek() == 2 &&
+		xdate.getMonth() == 0 &&
+		xdate.getDate() == 8;
+});
+
+test("setWeek underflow", function() {
+	var xdate = new XDate(2012, 0, 3);
+	return +xdate.clone().setWeek(0) == +xdate.clone().addWeeks(-1) &&
+		+xdate.clone().setWeek(-1) == +xdate.clone().addWeeks(-2);
+});
+
+test("setWeek identity", function() {
+	var xdate = new XDate();
+	var t = xdate.getTime();
+	var w = xdate.getWeek();
+	xdate.setWeek(w);
+	return xdate.getTime() == t;
+});
+
+
+test("setUTCWeek identity", function() {
+	var xdate = new XDate();
+	var t = xdate.getTime();
+	var w = xdate.getUTCWeek();
+	xdate.setUTCWeek(w);
+	return xdate.getTime() == t;
+});
+

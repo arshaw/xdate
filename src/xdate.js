@@ -292,6 +292,18 @@ proto.getUTCWeek = function() {
 };
 
 
+proto.setWeek = function(n, year) {
+	_setWeek(this, n, year, false);
+	return this; // for chaining
+};
+
+
+proto.setUTCWeek = function(n, year) {
+	_setWeek(this, n, year, true);
+	return this; // for chaining
+};
+
+
 proto.addWeeks = function(delta) {
 	return this.addDays(Number(delta) * 7);
 };
@@ -323,10 +335,27 @@ function getWeek(year, month, date) {
 }
 
 
-function getWeek1(year) { // returns date of first week of year
+function getWeek1(year) { // returns Date of first week of year, in UTC
 	var d = new Date(UTC(year, 0, 4));
 	d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); // make it Monday of the week
 	return d;
+}
+
+
+function _setWeek(xdate, n, year, useUTC) {
+	var getField = curry(_getField, xdate, useUTC);
+	var setField = curry(_setField, xdate, useUTC);
+	var d = getWeek1(year===undefined ? getField(FULLYEAR) : year);
+	d.setUTCDate(
+		d.getUTCDate() +
+		(n-1) * 7 + // move ahead # of weeks (n is 1-based)
+		(getField(DAY) + 6) % 7 // move to correct day of week
+	);
+	setField(FULLYEAR, [
+		d.getUTCFullYear(),
+		d.getUTCMonth(),
+		d.getUTCDate()
+	]);
 }
 
 

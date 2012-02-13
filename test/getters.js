@@ -36,7 +36,11 @@ test("getWeek", function() {
 	return new XDate(2011, 2, 1).getWeek() == 9;
 });
 
-test("getWeek mega-test", function() {
+test("getUTCWeek", function() {
+	return new XDate(2011, 2, 1, 12, 30).getUTCWeek() == 9;
+});
+
+test("getWeek/getUTCWeek mega-test", function() {
 	if (!Date.prototype.toLocaleFormat) {
 		return "need Mozilla toLocaleFormat";
 	}
@@ -49,6 +53,15 @@ test("getWeek mega-test", function() {
 			return [
 				false,
 				realDate.toString() + '=' + w1 + ' ' + xdate.toString() + '=' + w2
+			];
+		}
+		var realDateUTC = XDate(realDate).setUTCMode(true, true).toDate();
+		w1 = parseInt(realDateUTC.toLocaleFormat('%V'), 10);
+		w2 = xdate.getUTCWeek();
+		if (w1 != w2) {
+			return [
+				false,
+				realDateUTC.toUTCString() + '=' + w1 + ' ' + xdate.toUTCString() + '=' + w2 + ' (UTC!)'
 			];
 		}
 		realDate.setDate(realDate.getDate() + 1);
