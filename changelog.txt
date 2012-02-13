@@ -1,0 +1,4 @@
+
+version 0.6 (2/12/12)
+	- setWeek and setUTCWeek methods (issue 5)
+	- now a Node.js package (issue 3)
