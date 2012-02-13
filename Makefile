@@ -17,7 +17,10 @@ xdate:
 		| ${VERSION_SED} \
 		| ${DATE_SED} \
 		> ${BUILD_DIR}/${DEVELOPMENT_FILE}
-	@java -jar ${BUILD_DIR}/compiler.jar --warning_level VERBOSE --jscomp_off checkTypes \
+	@java -jar ${BUILD_DIR}/compiler.jar \
+		--warning_level VERBOSE \
+		--jscomp_off checkTypes \
+		--externs ${BUILD_DIR}/externs.js \
 		--js ${BUILD_DIR}/${DEVELOPMENT_FILE} \
 		> ${BUILD_DIR}/${PRODUCTION_FILE}
 	@mkdir -p ${DIST_DIR}

@@ -793,10 +793,14 @@ function zeroPad(n, len) {
 	return n;
 }
 
+
+
 // Export for Node.js
 if (typeof module !== 'undefined' && module.exports) {
 	module.exports = XDate;
 }
+
+
 return XDate;
 
 })(Date, Math, Array);
