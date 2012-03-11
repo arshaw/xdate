@@ -345,16 +345,12 @@ function _setWeek(xdate, n, year, useUTC) {
 	var getField = curry(_getField, xdate, useUTC);
 	var setField = curry(_setField, xdate, useUTC);
 	var d = getWeek1(year===undefined ? getField(FULLYEAR) : year);
-	d.setUTCDate(
-		d.getUTCDate() +
-		(n-1) * 7 + // move ahead # of weeks (n is 1-based)
-		(getField(DAY) + 6) % 7 // move to correct day of week
-	);
-	setField(FULLYEAR, [
-		d.getUTCFullYear(),
-		d.getUTCMonth(),
-		d.getUTCDate()
-	]);
+	if (!useUTC) {
+		d = coerceToLocal(d);
+	}
+	xdate.setTime(+d);
+	setField(DATE, [ getField(DATE) + (n-1) * 7 ]); // would have used xdate.addUTCWeeks :(
+		// n-1 because n is 1-based
 }
 
 
