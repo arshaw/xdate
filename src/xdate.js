@@ -378,7 +378,7 @@ function parse(str, utcMode, xdate) {
 	var i = 0;
 	var res;
 	for (; i<parsers.length; i++) {
-		res = parsers[0](str, utcMode, xdate);
+		res = parsers[i](str, utcMode, xdate);
 		if (res) {
 			return res;
 		}
