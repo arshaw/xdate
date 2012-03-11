@@ -1,4 +1,11 @@
 
+version 0.7 (3/10/12)
+	- setWeek/setUTCWeek behavior change
+	  (moves date to Monday 00:00:00 of given week)
+	- fix bug with custom parsers (issue 8)
+
 version 0.6 (2/12/12)
 	- setWeek and setUTCWeek methods (issue 5)
 	- now a Node.js package (issue 3)
+
+version 0.5 (10/24/11)
