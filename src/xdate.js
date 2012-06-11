@@ -175,42 +175,42 @@ each(methodSubjects, function(subject, fieldIndex) {
 	proto['get' + subject] = function() {
 		return _getField(this[0], getUTCMode(this), fieldIndex);
 	};
-	
+
 	if (fieldIndex != YEAR) { // because there is no getUTCYear
-	
+
 		proto['getUTC' + subject] = function() {
 			return _getField(this[0], true, fieldIndex);
 		};
-		
+
 	}
 
 	if (fieldIndex != DAY) { // because there is no setDay or setUTCDay
 	                         // and the add* and diff* methods use DATE instead
-		
+
 		proto['set' + subject] = function(value) {
 			_set(this, fieldIndex, value, arguments, getUTCMode(this));
 			return this; // for chaining
 		};
-		
+
 		if (fieldIndex != YEAR) { // because there is no setUTCYear
 		                          // and the add* and diff* methods use FULLYEAR instead
-			
+
 			proto['setUTC' + subject] = function(value) {
 				_set(this, fieldIndex, value, arguments, true);
 				return this; // for chaining
 			};
-			
+
 			proto['add' + (subjectPlurals[fieldIndex] || subject)] = function(delta, preventOverflow) {
 				_add(this, fieldIndex, delta, preventOverflow);
 				return this; // for chaining
 			};
-			
+
 			proto['diff' + (subjectPlurals[fieldIndex] || subject)] = function(otherDate) {
 				return _diff(this, otherDate, fieldIndex);
 			};
-			
+
 		}
-		
+
 	}
 
 });
@@ -463,13 +463,13 @@ function format(xdate, formatString, settings, uniqueness, useUTC) {
 	var locales = XDate.locales;
 	var defaultLocaleSettings = locales[XDate.defaultLocale] || {};
 	var getField = curry(_getField, xdate, useUTC);
-	
+
 	settings = (isString(settings) ? locales[settings] : settings) || {};
-	
+
 	function getSetting(name) {
 		return settings[name] || defaultLocaleSettings[name];
 	}
-	
+
 	function getFieldAndTrace(fieldIndex) {
 		if (uniqueness) {
 			var i = (fieldIndex == DAY ? DATE : fieldIndex) - 1;
@@ -479,7 +479,7 @@ function format(xdate, formatString, settings, uniqueness, useUTC) {
 		}
 		return getField(fieldIndex);
 	}
-	
+
 	return _format(xdate, formatString, getFieldAndTrace, getSetting, useUTC);
 }
 
