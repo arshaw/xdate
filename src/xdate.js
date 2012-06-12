@@ -440,6 +440,79 @@ proto.toISOString = function() {
 	return this.toUTCString(ISO_FORMAT_STRING_TZ);
 };
 
+proto.toRelativeString = function(unit) {
+  var relativeString = '';
+  var unitString = '';
+  var magnitude = 0;
+  var now = new XDate();
+  switch (unit) {
+    case 'y':
+      unitString = 'years';
+      magnitude = this.diffYears( now );
+    break;
+
+    case 'M':
+      unitString = 'months';
+      magnitude = this.diffMonths( now );
+    break;
+
+    case 'd':
+      unitString = 'days';
+      magnitude = this.diffDays( now );
+    break;
+
+    case 'h':
+      unitString = 'hours';
+      magnitude = this.diffHours( now );
+    break;
+
+    case 'm':
+      unitString = 'minutes';
+      magnitude = this.diffMinutes( now );
+    break;
+
+    case 's':
+      unitString = 'seconds';
+      magnitude = this.diffSeconds( now );
+    break;
+
+    case 'ms':
+      unitString = 'milliseconds';
+      magnitude = this.diffMilliseconds( now );
+    break;
+
+    // Use whichever unit yields the lowest magnitude greater than 1
+    default:
+      if (Math.abs(magnitude = this.diffYears( now )) > 1)             unitString = 'years';
+      else if (Math.abs(magnitude = this.diffMonths( now )) > 1)       unitString = 'months';
+      else if (Math.abs(magnitude = this.diffDays( now )) > 1)         unitString = 'days';
+      else if (Math.abs(magnitude = this.diffHours( now )) > 1)        unitString = 'hours';
+      else if (Math.abs(magnitude = this.diffMinutes( now )) > 1)      unitString = 'minutes';
+      else if (Math.abs(magnitude = this.diffSeconds( now )) > 1)      unitString = 'seconds';
+      else if (Math.abs(magnitude = this.diffMilliseconds( now )) > 1) unitString = 'milliseconds';
+      else                                                             magnitude = 0;
+    break;
+  }
+
+  magnitude = parseInt( magnitude );
+
+  if (magnitude == 1 || magnitude == 0) {
+    unitString = unitString.slice(0, -1);
+  }
+
+  if (magnitude > 0) {
+    relativeString = magnitude + ' ' + unitString + ' ago';
+  }
+  else if (magnitude < 0) {
+    relativeString = 'in ' + Math.abs(magnitude) + ' ' + unitString;
+  }
+  else {
+    relativeString = 'within the past ' + unitString;
+  }
+
+  return relativeString;
+}
+
 
 XDate.defaultLocale = '';
 XDate.locales = {
