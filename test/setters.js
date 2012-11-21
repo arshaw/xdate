@@ -230,3 +230,13 @@ test("setWeek underflow", function() {
 		+xdate.clone().setWeek(-1) == +xdate.clone().addWeeks(-2);
 });
 
+test("setUTCWeek correctly handles UTC week numbering edge case", function() {
+	var date = new XDate(Date.UTC(2010, 0, 3));
+
+	var wasWeek53 = date.getUTCWeek() === 53;
+	date.setUTCWeek(53);
+
+	return wasWeek53 && "Mon, 28 Dec 2009 00:00:00 GMT" === date.toUTCString();
+});
+
+
