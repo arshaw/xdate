@@ -1,4 +1,9 @@
 
+version 0.8 (3/30/13)
+	- now an AMD module (thx colonelchlorine)
+	- fixed setUTCWeek edge case bug (issue 18, thx timruffles)
+	- fixed preventOverflow bug (issue 19)
+
 version 0.7 (3/10/12)
 	- setWeek/setUTCWeek behavior change
 	  (moves date to Monday 00:00:00 of given week)
