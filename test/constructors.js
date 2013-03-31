@@ -94,6 +94,13 @@ test("year/month/date, utcMode=false", function() {
 		!xdate1.getMilliseconds();
 });
 
+test("toString, utcMode=undefined/true", function() {
+	var xdate1 = new XDate('2012-09-21');
+	var xdate2 = new XDate('2012-09-21', true);
+	return xdate1.toString('yyyy-MM-dd HH-mm-ss') == '2012-09-21 00-00-00' &&
+		xdate2.toString('yyyy-MM-dd HH-mm-ss') == '2012-09-21 00-00-00';
+});
+
 test("year/month/date/minutes/seconds/milliseconds, utcMode=false", function() {
 	var YEAR = 2011;
 	var MONTH = 5;
