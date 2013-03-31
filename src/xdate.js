@@ -341,10 +341,27 @@ function getWeek1(year) { // returns Date of first week of year, in UTC
 }
 
 
+function getWeekOrderingYear(date) {
+	var year = date.getUTCFullYear();
+	var currentWeek1 = getWeek1(year);
+	// are we on week 53 of last year?
+	if (date < currentWeek1) {
+		return year-1;
+	}else{
+		// are we in week 1 of next year?
+		var nextWeek1 = getWeek1(year+1);
+		if (date >= nextWeek1) {
+			week1 = nextWeek1;
+			return year + 1;
+		}
+	}	
+	return year;
+}
+
 function _setWeek(xdate, n, year, useUTC) {
 	var getField = curry(_getField, xdate, useUTC);
 	var setField = curry(_setField, xdate, useUTC);
-	var d = getWeek1(year===undefined ? getField(FULLYEAR) : year);
+	var d = getWeek1(year===undefined ? getWeekOrderingYear(xdate) : year);
 	if (!useUTC) {
 		d = coerceToLocal(d);
 	}
