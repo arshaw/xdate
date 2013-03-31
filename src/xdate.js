@@ -320,17 +320,22 @@ function _getWeek(getField) {
 
 function getWeek(year, month, date) {
 	var d = new Date(UTC(year, month, date));
-	var currentWeek1 = getWeek1(year);
-	var week1 = currentWeek1;
-	if (d < currentWeek1) {
-		week1 = getWeek1(year-1);
-	}else{
-		var nextWeek1 = getWeek1(year+1);
-		if (d >= nextWeek1) {
-			week1 = nextWeek1;
-		}
-	}
+	var week1 = getWeek1(
+		getWeekYear(year, month, date)
+	);
 	return Math.floor(Math.round((d - week1) / DAY_MS) / 7) + 1;
+}
+
+
+function getWeekYear(year, month, date) { // get the year that the date's week # belongs to
+	var d = new Date(UTC(year, month, date));
+	if (d < getWeek1(year)) {
+		return year - 1;
+	}
+	else if (d >= getWeek1(year + 1)) {
+		return year + 1;
+	}
+	return year;
 }
 
 
@@ -341,31 +346,24 @@ function getWeek1(year) { // returns Date of first week of year, in UTC
 }
 
 
-function getWeekOrderingYear(date) {
-	var year = date.getUTCFullYear();
-	var currentWeek1 = getWeek1(year);
-	// are we on week 53 of last year?
-	if (date < currentWeek1) {
-		return year-1;
-	}else{
-		// are we in week 1 of next year?
-		var nextWeek1 = getWeek1(year+1);
-		if (date >= nextWeek1) {
-			week1 = nextWeek1;
-			return year + 1;
-		}
-	}	
-	return year;
-}
-
 function _setWeek(xdate, n, year, useUTC) {
 	var getField = curry(_getField, xdate, useUTC);
 	var setField = curry(_setField, xdate, useUTC);
-	var d = getWeek1(year===undefined ? getWeekOrderingYear(xdate) : year);
-	if (!useUTC) {
-		d = coerceToLocal(d);
+
+	if (year === undefined) {
+		year = getWeekYear(
+			getField(FULLYEAR),
+			getField(MONTH),
+			getField(DATE)
+		);
 	}
-	xdate.setTime(+d);
+
+	var week1 = getWeek1(year);
+	if (!useUTC) {
+		week1 = coerceToLocal(week1);
+	}
+
+	xdate.setTime(+week1);
 	setField(DATE, [ getField(DATE) + (n-1) * 7 ]); // would have used xdate.addUTCWeeks :(
 		// n-1 because n is 1-based
 }
