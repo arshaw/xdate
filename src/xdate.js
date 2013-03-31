@@ -77,6 +77,13 @@ proto.splice = Array.prototype.splice;
 /* Constructor
 ---------------------------------------------------------------------------------*/
 
+// TODO: in future, I'd change signature for the constructor regarding the `true` utc-mode param. ~ashaw
+//   I'd move the boolean to be the *first* argument. Still optional. Seems cleaner.
+//   I'd remove it from the `xdate`, `nativeDate`, and `milliseconds` constructors.
+//      (because you can simply call .setUTCMode(true) after)
+//   And I'd only leave it for the y/m/d/h/m/s/m and `dateString` constructors
+//      (because those are the only constructors that need it for DST-gap data-loss reasons)
+//   Should do this for 1.0
 
 function XDate() {
 	return init(
