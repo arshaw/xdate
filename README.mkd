@@ -1,3 +1,7 @@
+
+*Important*: [Blog post about future development](http://blog.arshaw.com/1/post/2013/03/xdate-08-and-future-development.html)
+-------------------------------------------------
+
 XDate
 =====
 
