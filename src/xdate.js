@@ -219,14 +219,19 @@ each(methodSubjects, function(subject, fieldIndex) {
 function _set(xdate, fieldIndex, value, args, useUTC) {
 	var getField = curry(_getField, xdate[0], useUTC);
 	var setField = curry(_setField, xdate[0], useUTC);
-	var month = fieldIndex == MONTH ? value % 12 : getField(MONTH);
+	var expectedMonth;
 	var preventOverflow = false;
 	if (args.length == 2 && isBoolean(args[1])) {
 		preventOverflow = args[1];
-		args = [value];
+		args = [ value ];
+	}
+	if (fieldIndex == MONTH) {
+		expectedMonth = (value % 12 + 12) % 12;
+	}else{
+		expectedMonth = getField(MONTH);
 	}
 	setField(fieldIndex, args);
-	if (preventOverflow && getField(MONTH) != month) {
+	if (preventOverflow && getField(MONTH) != expectedMonth) {
 		setField(MONTH, [ getField(MONTH) - 1 ]);
 		setField(DATE, [ getDaysInMonth(getField(FULLYEAR), getField(MONTH)) ]);
 	}

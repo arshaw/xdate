@@ -42,6 +42,14 @@ test("addMonths, prevent overflow", function() {
 });
 
 
+test("addMonths, prevent overflow, backwards january bug", function() {
+	var d1 = new XDate(2013, 0, 28); // Jan 28
+	var d2 = new XDate(2013, 0, 14); // Jan 14
+	return d1.addMonths(-1, true).toString('yyyy-MM-dd') == '2012-12-28' && // Dec 28
+		d2.addMonths(-1, true).toString('yyyy-MM-dd') == '2012-12-14'; // Dec 14
+});
+
+
 test("addDays", function() {
 	var d1 = new XDate(2009, 5, 8);
 	d1.addDays(30);
