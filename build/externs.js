@@ -1,1 +1,2 @@
-var module
+var module;
+var define;
