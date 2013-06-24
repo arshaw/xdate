@@ -303,6 +303,16 @@ proto.getUTCWeek = function() {
 };
 
 
+proto.getWeekYear = function() {
+	return _getWeekYear(curry(_getField, this, false));
+};
+
+
+proto.getUTCWeekYear = function() {
+	return _getWeekYear(curry(_getField, this, true));
+};
+
+
 proto.setWeek = function(n, year) {
 	_setWeek(this, n, year, false);
 	return this; // for chaining
@@ -336,6 +346,11 @@ function getWeek(year, month, date) {
 		getWeekYear(year, month, date)
 	);
 	return Math.floor(Math.round((d - week1) / DAY_MS) / 7) + 1;
+}
+
+
+function _getWeekYear(getField) {
+	return getWeekYear(getField(FULLYEAR), getField(MONTH), getField(DATE));
 }
 
 
@@ -590,7 +605,9 @@ function getTokenReplacement(xdate, token, getField, getSetting, useUTC) {
 		case 'zzz'  : return useUTC ? 'Z' : _getTZString(xdate, token);
 		case 'w'    : return _getWeek(getField);
 		case 'ww'   : return zeroPad(_getWeek(getField));
-		case 'S'    :
+		case 'jj'		: return (_getWeekYear(getField)+'').substring(2);
+		case 'jjjj' : return _getWeekYear(getField);
+		case 'S'    : 
 			var d = getField(DATE);
 			if (d > 10 && d < 20) return 'th';
 			return ['st', 'nd', 'rd'][d % 10 - 1] || 'th';

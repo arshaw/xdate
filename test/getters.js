@@ -69,3 +69,11 @@ test("getWeek/getUTCWeek mega-test", function() {
 	}
 	return true;
 });
+
+test("getWeekYear", function() {
+	return new XDate(2012, 12, 31).getWeekYear() == 2013;
+});
+
+test("getUTCWeekYear", function() {
+	return new XDate(2012, 12, 31, 12, 30).getUTCWeekYear() == 2013;
+});
