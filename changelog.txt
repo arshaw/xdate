@@ -1,4 +1,7 @@
 
+version 0.8.1 (10/9/13)
+	- support for bower component
+
 version 0.8 (3/30/13)
 	- now an AMD module (thx colonelchlorine)
 	- fixed setUTCWeek edge case bug (issue 18, thx timruffles)

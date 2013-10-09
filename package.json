@@ -1,6 +1,6 @@
 {
 	"name" : "xdate",
-	"version": "0.8.0",
+	"version": "0.8.1",
 	"author": "Adam Shaw",
 	"homepage": "http://arshaw.com/xdate/",
 	"description": "A Modern JavaScript Date Library",
