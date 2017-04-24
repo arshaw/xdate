@@ -105,7 +105,10 @@ function init(xdate, args) {
 	}
 	else if (len == 1) {
 		var arg = args[0];
-		if (arg instanceof Date || isNumber(arg)) {
+		if (arg instanceof Date) {
+			xdate[0] = new Date(arg.getTime());
+		}
+		else if (isNumber(arg)) {
 			xdate[0] = new Date(+arg);
 		}
 		else if (arg instanceof XDate) {
@@ -154,7 +157,7 @@ function setUTCMode(xdate, utcMode, doCoercion) {
 			if (doCoercion) {
 				xdate[0] = coerceToLocal(xdate[0]);
 			}else{
-				xdate[0] = new Date(+xdate[0]);
+				xdate[0] = new Date(xdate[0].getTime());
 			}
 			// toString will have been cleared
 		}
@@ -182,42 +185,42 @@ each(methodSubjects, function(subject, fieldIndex) {
 	proto['get' + subject] = function() {
 		return _getField(this[0], getUTCMode(this), fieldIndex);
 	};
-	
+
 	if (fieldIndex != YEAR) { // because there is no getUTCYear
-	
+
 		proto['getUTC' + subject] = function() {
 			return _getField(this[0], true, fieldIndex);
 		};
-		
+
 	}
 
 	if (fieldIndex != DAY) { // because there is no setDay or setUTCDay
 	                         // and the add* and diff* methods use DATE instead
-		
+
 		proto['set' + subject] = function(value) {
 			_set(this, fieldIndex, value, arguments, getUTCMode(this));
 			return this; // for chaining
 		};
-		
+
 		if (fieldIndex != YEAR) { // because there is no setUTCYear
 		                          // and the add* and diff* methods use FULLYEAR instead
-			
+
 			proto['setUTC' + subject] = function(value) {
 				_set(this, fieldIndex, value, arguments, true);
 				return this; // for chaining
 			};
-			
+
 			proto['add' + (subjectPlurals[fieldIndex] || subject)] = function(delta, preventOverflow) {
 				_add(this, fieldIndex, delta, preventOverflow);
 				return this; // for chaining
 			};
-			
+
 			proto['diff' + (subjectPlurals[fieldIndex] || subject)] = function(otherDate) {
 				return _diff(this, otherDate, fieldIndex);
 			};
-			
+
 		}
-		
+
 	}
 
 });
@@ -375,7 +378,7 @@ function _setWeek(xdate, n, year, useUTC) {
 		week1 = coerceToLocal(week1);
 	}
 
-	xdate.setTime(+week1);
+	xdate.setTime(week1.getTime());
 	setField(DATE, [ getField(DATE) + (n-1) * 7 ]); // would have used xdate.addUTCWeeks :(
 		// n-1 because n is 1-based
 }
@@ -435,7 +438,7 @@ function parseISO(str, utcMode, xdate) {
 				d = coerceToLocal(d);
 			}
 		}
-		return xdate.setTime(+d);
+		return xdate.setTime(d.getTime());
 	}
 }
 
@@ -490,13 +493,13 @@ function format(xdate, formatString, settings, uniqueness, useUTC) {
 	var locales = XDate.locales;
 	var defaultLocaleSettings = locales[XDate.defaultLocale] || {};
 	var getField = curry(_getField, xdate, useUTC);
-	
+
 	settings = (isString(settings) ? locales[settings] : settings) || {};
-	
+
 	function getSetting(name) {
 		return settings[name] || defaultLocaleSettings[name];
 	}
-	
+
 	function getFieldAndTrace(fieldIndex) {
 		if (uniqueness) {
 			var i = (fieldIndex == DAY ? DATE : fieldIndex) - 1;
@@ -506,7 +509,7 @@ function format(xdate, formatString, settings, uniqueness, useUTC) {
 		}
 		return getField(fieldIndex);
 	}
-	
+
 	return _format(xdate, formatString, getFieldAndTrace, getSetting, useUTC);
 }
 
@@ -651,7 +654,7 @@ proto.setTime = function(t) {
 
 proto.valid = methodize(valid);
 function valid(xdate) {
-	return !isNaN(+xdate[0]);
+	return !isNaN(xdate[0].getTime());
 }
 
 
@@ -666,7 +669,7 @@ proto.clearTime = function() {
 
 
 proto.toDate = function() {
-	return new Date(+this[0]);
+	return new Date(this[0].getTime());
 };
 
 
@@ -676,7 +679,7 @@ proto.toDate = function() {
 
 
 XDate.now = function() {
-	return +new Date();
+	return (new Date()).getTime();
 };
 
 
@@ -697,7 +700,7 @@ XDate.getDaysInMonth = getDaysInMonth;
 
 
 function _clone(xdate) { // returns the internal Date object that should be used
-	var d = new Date(+xdate[0]);
+	var d = new Date(xdate[0].getTime());
 	if (getUTCMode(xdate)) {
 		d.toString = toUTCString;
 	}
