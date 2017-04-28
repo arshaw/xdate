@@ -3,9 +3,11 @@
 var passedCnt = 0;
 var failedCnt = 0;
 var voidCnt = 0;
+var profiles = [];
 var error = false;
 
 window.test = function(name, func) {
+    var start = new Date();
 	var res = func();
 	var passed;
 	var message;
@@ -21,7 +23,9 @@ window.test = function(name, func) {
 	}
 	message = message ? " (<i>" + message + "</i>)" : '';
 	if (passed === true) {
-		document.write("<div><span style='color:green'>PASSED</span> - " + name + message + "</div>");
+        var duration = (new Date().getTime()) - start.getTime();
+        profiles.push({name: name, duration: duration});
+		document.write("<div><span style='color:green'>PASSED</span> - " + name + message + " (" + duration + "ms)</div>");
 		passedCnt++;
 	}
 	else if (passed === false) {
@@ -39,16 +43,30 @@ window.onerror = function() {
 };
 
 window.onload = function() {
-	var html = "<i>";
+	var resultsHtml = "<i>";
 	if (error) {
-		html += "<div style='color:red'>A JavaScript error has been thrown. Check your console.</div>";
+		resultsHtml += "<div style='color:red'>A JavaScript error has been thrown. Check your console.</div>";
 	}
-	html +=
+	resultsHtml +=
 		"<b>" + passedCnt + "</b> PASSED, " +
 		"<b>" + failedCnt + "</b> FAILED, " +
 		"<b>" + voidCnt + "</b> VOID" +
 		"</i>";
-	document.getElementById('test-results').innerHTML = html;
+	document.getElementById('test-results').innerHTML = resultsHtml;
+
+    if (!error) {
+        var profileHtml = '';
+        var profileData = profiles.slice(0).sort(function(a, b) {
+            if (a.duration == b.duration) {
+                return 0;
+            }
+            return a.duration < b.duration ? 1 : -1;
+        });
+        for (var i=0; i<profileData.length; i++) {
+            profileHtml += "<div><span>(" + profileData[i].duration + "ms) " + profiles[i].name + "</span></div>";
+        }
+        document.getElementById('test-profiles').innerHTML = profileHtml;
+    }
 };
 
 })();
