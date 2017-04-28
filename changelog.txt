@@ -1,4 +1,8 @@
 
+version 0.8.2 (04/28/17)
+	- Replaced usages of unary operator with getTime() for compatibility (#34)
+	  Now Ecmascript 3 compliant (#33) - thanks @contentfree
+
 version 0.8.1 (10/9/13)
 	- support for bower component
 
