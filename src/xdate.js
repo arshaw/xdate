@@ -109,7 +109,7 @@ function init(xdate, args) {
 			xdate[0] = new Date(arg.getTime());
 		}
 		else if (isNumber(arg)) {
-			xdate[0] = new Date(+arg);
+			xdate[0] = new Date(arg);
 		}
 		else if (arg instanceof XDate) {
 			xdate[0] = _clone(arg);
