@@ -306,6 +306,11 @@ proto.getUTCWeek = function() {
 };
 
 
+proto.getMonthWeeks = function() {
+	return _getMonthWeeks(this);
+};
+
+
 proto.setWeek = function(n, year) {
 	_setWeek(this, n, year, false);
 	return this; // for chaining
@@ -330,6 +335,11 @@ proto.diffWeeks = function(otherDate) {
 
 function _getWeek(getField) {
 	return getWeek(getField(FULLYEAR), getField(MONTH), getField(DATE));
+}
+
+
+function _getMonthWeeks(xdate) {
+	return getMonthWeeks(xdate);
 }
 
 
@@ -358,6 +368,35 @@ function getWeek1(year) { // returns Date of first week of year, in UTC
 	var d = new Date(UTC(year, 0, 4));
 	d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); // make it Monday of the week
 	return d;
+}
+
+
+function getMonthWeeks(xdate) {
+	var locales = XDate.locales;
+	var defaultLocaleSettings = locales[XDate.defaultLocale] || {};
+	
+	var first = xdate.clone();
+	first = first.setDate(1).addDays(defaultLocaleSettings.firstDay - first.getDay());	
+	
+	var last = xdate.clone();
+	last = last.setDate(1).addMonths(1).addDays(-1).addDays(defaultLocaleSettings.firstDay + 6 - last.getDay());
+	
+	weeks = Math.ceil(first.diffWeeks(last));
+	var weeksDays = [];
+	var positionDate = first.clone();
+	
+	for(var i = 0; i < weeks; i++) {
+		weeksDays[i] = [];
+		for(var j = 0; j < 7; j++) {
+			weeksDays[i].push(positionDate.clone());
+			positionDate.addDays(1);
+		}
+		if(positionDate.getMonth() != xdate.getMonth()) {
+			i = weeks;	
+		}
+	}
+	
+	return weeksDays;
 }
 
 
@@ -479,7 +518,17 @@ XDate.locales = {
 		dayNames: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
 		dayNamesShort: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
 		amDesignator: 'AM',
-		pmDesignator: 'PM'
+		pmDesignator: 'PM',
+		firstDay: 0
+	},
+	'es': {
+		monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Augosto','Septimbre','Octubre','Noviembre','Diciembre'],
+		monthNamesShort: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+		dayNames: ['Domingo','Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'],
+		dayNamesShort: ['Dom','Lun','Mar','Mie','Jue','Vie','Sab'],
+		amDesignator: 'AM',
+		pmDesignator: 'PM',
+		firstDay: 1
 	}
 };
 XDate.formatters = {

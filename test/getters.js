@@ -69,3 +69,7 @@ test("getWeek/getUTCWeek mega-test", function() {
 	}
 	return true;
 });
+
+test("getMonthWeeks", function() {
+	return (new XDate(2012, 10, 1).getMonthWeeks().length == 5 && new XDate(2012, 11, 1).getMonthWeeks().length == 6 && new XDate(2021, 1, 1).getMonthWeeks().length == 4);
+});
