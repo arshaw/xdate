@@ -1,5 +1,5 @@
 
-*Important*: [Blog post about future development](http://blog.arshaw.com/1/post/2013/03/xdate-08-and-future-development.html)
+*Important*: [Blog post about future development](https://arshaw.com/2013/03/xdate-08-and-future-development)
 -------------------------------------------------
 
 XDate
