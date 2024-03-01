@@ -59,6 +59,16 @@ test("long names", function() {
 		.toString('dddd, MMMM dd, yyyy') == "Saturday, November 05, 2011";
 });
 
+test("week year, two digits", function() {
+	return new XDate(2012, 12, 31)
+		.toString('jj') == '13';
+});
+
+test("week year, four digits", function() {
+	return new XDate(2012, 12, 31)
+		.toString('jjjj') == '2013';
+});
+
 
 test("ordinals", function() {
 	return new XDate(2011, 1, 1).toString('dS') == "1st" &&
