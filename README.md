@@ -6,7 +6,7 @@ A Modern JavaScript Date Library (circa 2013)
 
 > [!IMPORTANT]
 > This package is no longer actively maintained
-> ([blog post](http://blog.arshaw.com/1/post/2013/03/xdate-08-and-future-development.html)).
+> ([blog post](https://arshaw.com/2013/03/xdate-08-and-future-development)).
 > We recommend using [temporal-polyfill](https://www.npmjs.com/package/temporal-polyfill) instead.
 > It is written by the same author and implements the new standard for JavaScript dates.
 
