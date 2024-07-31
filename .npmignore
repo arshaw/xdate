@@ -1,0 +1,5 @@
+build/
+test/
+bower.json
+changelog.txt
+Makefile

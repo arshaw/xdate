@@ -12,5 +12,9 @@
 		"type": "git",
 		"url": "https://github.com/arshaw/xdate.git"
 	},
+	"scripts": {
+		"build": "make xdate",
+		"clean": "make clean"
+	},
 	"main": "./src/xdate.js"
 }
