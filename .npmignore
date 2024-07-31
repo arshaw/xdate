@@ -2,5 +2,6 @@ build/
 dist/
 test/
 bower.json
-changelog.txt
+CHANGELOG.txt
 Makefile
+version.txt
