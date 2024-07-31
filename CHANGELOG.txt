@@ -2,6 +2,7 @@
 version 0.8.3 (07/30/24)
 	- add license to npm package.json (#47)
 	- exclude build-related utilities from npm package
+	- populate changelog
 
 version 0.8.2 (04/28/17)
 	- Replaced usages of unary operator with getTime() for compatibility (#34)
